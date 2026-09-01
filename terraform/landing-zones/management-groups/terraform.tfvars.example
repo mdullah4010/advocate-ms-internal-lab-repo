@@ -1,0 +1,4 @@
+tenant_id                  = "00000000-0000-0000-0000-000000000000"
+deployment_subscription_id = "00000000-0000-0000-0000-000000000000"
+parent_management_group_id = "/providers/Microsoft.Management/managementGroups/replace-with-parent-id"
+management_group_prefix    = "advocate"

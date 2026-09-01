@@ -1,0 +1,25 @@
+tenant_id                  = "00000000-0000-0000-0000-000000000000"
+deployment_subscription_id = "00000000-0000-0000-0000-000000000000"
+
+vended_subscriptions = {
+  example = {
+    subscription_name   = "advocate-example-prod"
+    alias               = "advocate-example-prod"
+    billing_scope_id    = "/providers/Microsoft.Billing/billingAccounts/replace-with-approved-scope"
+    workload            = "Production"
+    management_group_id = "/providers/Microsoft.Management/managementGroups/advocate-prod-clinical-systems"
+    tags = {
+      environment = "prod"
+      managedBy   = "terraform"
+      owner       = "replace-with-owner"
+    }
+  }
+}
+
+existing_subscription_placements = {
+  example = {
+    subscription_id     = "00000000-0000-0000-0000-000000000000"
+    management_group_id = "/providers/Microsoft.Management/managementGroups/advocate-prod-clinical-systems"
+    move_authorized     = false
+  }
+}

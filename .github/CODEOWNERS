@@ -1,0 +1,5 @@
+* @replace-with-platform-owners
+
+/terraform/landing-zones/rbac/ @replace-with-platform-owners @replace-with-security-owners
+/terraform/landing-zones/subscription-vending-placement/ @replace-with-platform-owners @replace-with-billing-owners
+/.github/workflows/ @replace-with-platform-owners @replace-with-security-owners

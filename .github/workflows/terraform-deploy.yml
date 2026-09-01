@@ -1,0 +1,141 @@
+name: Terraform Plan and Apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      stack:
+        description: Terraform stack
+        required: true
+        type: choice
+        options:
+          - management-groups
+          - rbac
+          - subscription-vending-placement
+      environment:
+        description: Deployment environment
+        required: true
+        type: choice
+        options:
+          - test
+          - prod
+      tfvars_path:
+        description: Repository-relative variable file path
+        required: true
+        type: string
+      apply:
+        description: Apply the reviewed saved plan
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: advocate-${{ inputs.environment }}-${{ inputs.stack }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}-plan
+    defaults:
+      run:
+        shell: bash
+        working-directory: terraform/landing-zones/${{ inputs.stack }}
+    env:
+      ARM_USE_OIDC: "true"
+      ARM_USE_AZUREAD: "true"
+      ARM_CLIENT_ID: ${{ vars.AZURE_PLAN_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Format check
+        run: terraform fmt -check -recursive ../..
+
+      - name: Initialize backend
+        run: >-
+          terraform init -input=false
+          -backend-config="resource_group_name=${{ vars.TFSTATE_RESOURCE_GROUP }}"
+          -backend-config="storage_account_name=${{ vars.TFSTATE_STORAGE_ACCOUNT }}"
+          -backend-config="container_name=${{ vars.TFSTATE_CONTAINER }}"
+          -backend-config="key=advocate/${{ inputs.environment }}/${{ inputs.stack }}.tfstate"
+          -backend-config="subscription_id=${{ vars.TFSTATE_SUBSCRIPTION_ID }}"
+          -backend-config="tenant_id=${{ vars.AZURE_TENANT_ID }}"
+          -backend-config="use_oidc=true"
+          -backend-config="use_azuread_auth=true"
+
+      - name: Validate
+        run: terraform validate -no-color
+
+      - name: Create saved plan
+        run: terraform plan -input=false -no-color -out=tfplan -var-file="${{ github.workspace }}/${{ inputs.tfvars_path }}"
+
+      - name: Render plan
+        run: terraform show -no-color tfplan > tfplan.txt
+
+      - name: Upload immutable plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ inputs.environment }}-${{ inputs.stack }}-${{ github.run_id }}
+          path: |
+            terraform/landing-zones/${{ inputs.stack }}/tfplan
+            terraform/landing-zones/${{ inputs.stack }}/tfplan.txt
+          if-no-files-found: error
+          retention-days: 7
+
+  apply:
+    if: ${{ inputs.apply }}
+    needs: plan
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}-apply
+    defaults:
+      run:
+        shell: bash
+        working-directory: terraform/landing-zones/${{ inputs.stack }}
+    env:
+      ARM_USE_OIDC: "true"
+      ARM_USE_AZUREAD: "true"
+      ARM_CLIENT_ID: ${{ vars.AZURE_APPLY_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Initialize backend
+        run: >-
+          terraform init -input=false
+          -backend-config="resource_group_name=${{ vars.TFSTATE_RESOURCE_GROUP }}"
+          -backend-config="storage_account_name=${{ vars.TFSTATE_STORAGE_ACCOUNT }}"
+          -backend-config="container_name=${{ vars.TFSTATE_CONTAINER }}"
+          -backend-config="key=advocate/${{ inputs.environment }}/${{ inputs.stack }}.tfstate"
+          -backend-config="subscription_id=${{ vars.TFSTATE_SUBSCRIPTION_ID }}"
+          -backend-config="tenant_id=${{ vars.AZURE_TENANT_ID }}"
+          -backend-config="use_oidc=true"
+          -backend-config="use_azuread_auth=true"
+
+      - name: Download reviewed plan
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan-${{ inputs.environment }}-${{ inputs.stack }}-${{ github.run_id }}
+          path: terraform/landing-zones/${{ inputs.stack }}
+
+      - name: Apply saved plan
+        run: terraform apply -input=false -auto-approve tfplan

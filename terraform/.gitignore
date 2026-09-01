@@ -1,0 +1,29 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+.terraformrc
+terraform.rc
+
+# Variable and backend files can contain environment details
+*.auto.tfvars
+*.auto.tfvars.json
+backend.hcl
+!*.example
+
+# Credentials and secrets
+.env
+.env.*
+*.pem
+*.pfx
+*.key
+secrets/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
