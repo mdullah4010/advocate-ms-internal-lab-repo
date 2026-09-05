@@ -20,4 +20,13 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Confirm Azure login
-        run: az account show --output table
+        run: |
+          az account show --output table
+
+      - name: Confirm Azure subscription
+        run: |
+          az account show --query "{Subscription:name, State:state}" --output table
+
+      - name: Test Azure read access
+        run: |
+          az group list --query "[].{ResourceGroup:name, Location:location}" --output table
