@@ -32,7 +32,6 @@ jobs:
   deploy-verify-destroy:
     name: Deploy, verify, and destroy connectivity
     runs-on: ubuntu-latest
-    environment: test-apply
     timeout-minutes: 60
 
     defaults:

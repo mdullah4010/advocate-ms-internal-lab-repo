@@ -15,8 +15,8 @@ The example includes reserved subnet names and Azure-compliant minimum sizes for
 This test branch uses local Terraform state and the GitHub-hosted runner defined in `.github/workflows/terraform-connectivity-local-test.yml`. It is intended only to prove that connectivity resources can be created and deleted.
 
 1. Review `terraform/environments/test/connectivity.tfvars`, especially names and non-overlapping CIDR ranges.
-2. Configure the `test-apply` GitHub environment with `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, and `AZURE_SUBSCRIPTION_ID` secrets.
-3. Configure the Azure identity with a federated credential whose subject is `repo:<organization>/<repository>:environment:test-apply`.
+2. Configure `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, and `AZURE_SUBSCRIPTION_ID` as GitHub repository Actions secrets.
+3. Configure the Azure identity with a federated credential whose subject is `repo:<organization>/<repository>:ref:refs/heads/feature/connectivity-local-state-test`.
 4. Grant that identity only the Azure role required to create the test resources in the target subscription or resource group.
 5. Open **Actions**, select **Temporary Connectivity Deployment Test**, choose this branch, and dispatch the workflow.
 6. Confirm that apply, Azure verification, and destroy all succeed.
