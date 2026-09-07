@@ -1,16 +1,6 @@
 name: Temporary Connectivity Deployment Test
 
 on:
-  push:
-    branches:
-      - feature/connectivity-local-state-test
-    paths:
-      - ".github/workflows/terraform-connectivity-local-test.yml"
-      - "terraform/landing-zones/Platform/Connectivity/**"
-      - "terraform/modules/resource-group/**"
-      - "terraform/modules/virtual-network/**"
-      - "terraform/modules/subnet/**"
-      - "terraform/environments/test/connectivity.tfvars"
   workflow_dispatch:
     inputs:
       confirmation:
@@ -51,6 +41,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Require main branch
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "This deployment test must be dispatched from the main branch." >&2
+            exit 1
+          fi
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
