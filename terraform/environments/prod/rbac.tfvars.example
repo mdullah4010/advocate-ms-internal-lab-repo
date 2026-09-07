@@ -1,0 +1,11 @@
+hierarchy_role_assignments = {
+  platform_owners = {
+    management_group_name = "advocate"
+    principal_id          = "00000000-0000-0000-0000-000000000000"
+    role_definition_name  = "Reader"
+    description           = "Production landing-zone platform team access."
+    principal_type        = "Group"
+  }
+}
+
+role_assignments = {}

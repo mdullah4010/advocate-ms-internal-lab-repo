@@ -1,0 +1,2 @@
+parent_management_group_id = "/providers/Microsoft.Management/managementGroups/replace-with-production-parent-id"
+management_group_prefix    = "advocate"
