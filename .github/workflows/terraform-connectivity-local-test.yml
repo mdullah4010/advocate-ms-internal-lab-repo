@@ -74,7 +74,11 @@ jobs:
         run: az group list --query "[].{ResourceGroup:name, Location:location}" --output table
 
       - name: Verify test configuration
-        run: test -f "$TFVARS_FILE" || { echo "Missing test configuration: $TFVARS_FILE" >&2; exit 1; }
+        run: |
+          test -f "$TFVARS_FILE" || {
+            echo "Missing test configuration: $TFVARS_FILE" >&2
+            exit 1
+          }
 
       - name: Check formatting
         run: terraform fmt -check -recursive "${{ github.workspace }}/terraform"
