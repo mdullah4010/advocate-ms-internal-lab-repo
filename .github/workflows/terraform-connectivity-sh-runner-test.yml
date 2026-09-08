@@ -1,4 +1,4 @@
-name: Temporary Connectivity Deployment Test
+name: Temporary Connectivity Deployment Test using Self-hosted Runner
 
 on:
   workflow_dispatch:
