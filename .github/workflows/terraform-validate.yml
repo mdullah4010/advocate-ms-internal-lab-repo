@@ -4,7 +4,8 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "terraform/**"
+      - "envs/**"
+      - "modules/**"
       - ".github/workflows/terraform-*.yml"
   workflow_dispatch:
 
@@ -25,7 +26,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: terraform/landing-zones/${{ matrix.stack }}
+        working-directory: envs/prod/${{ matrix.stack }}
 
     steps:
       - name: Checkout
@@ -37,7 +38,7 @@ jobs:
           terraform_version: "1.9.8"
 
       - name: Format check
-        run: terraform fmt -check -recursive ../..
+        run: terraform fmt -check -recursive "${{ github.workspace }}/envs/prod" "${{ github.workspace }}/modules"
 
       - name: Initialize without backend
         run: terraform init -backend=false -input=false

@@ -43,7 +43,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: terraform/landing-zones/${{ inputs.stack }}
+        working-directory: envs/${{ inputs.environment }}/${{ inputs.stack }}
     env:
       ARM_USE_OIDC: "true"
       ARM_USE_AZUREAD: "true"
@@ -61,7 +61,7 @@ jobs:
           terraform_version: "1.9.8"
 
       - name: Format check
-        run: terraform fmt -check -recursive ../..
+        run: terraform fmt -check -recursive "${{ github.workspace }}/envs/${{ inputs.environment }}" "${{ github.workspace }}/modules"
 
       - name: Initialize backend
         run: >-
@@ -89,8 +89,8 @@ jobs:
         with:
           name: tfplan-${{ inputs.environment }}-${{ inputs.stack }}-${{ github.run_id }}
           path: |
-            terraform/landing-zones/${{ inputs.stack }}/tfplan
-            terraform/landing-zones/${{ inputs.stack }}/tfplan.txt
+            envs/${{ inputs.environment }}/${{ inputs.stack }}/tfplan
+            envs/${{ inputs.environment }}/${{ inputs.stack }}/tfplan.txt
           if-no-files-found: error
           retention-days: 7
 
@@ -102,7 +102,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: terraform/landing-zones/${{ inputs.stack }}
+        working-directory: envs/${{ inputs.environment }}/${{ inputs.stack }}
     env:
       ARM_USE_OIDC: "true"
       ARM_USE_AZUREAD: "true"
@@ -135,7 +135,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: tfplan-${{ inputs.environment }}-${{ inputs.stack }}-${{ github.run_id }}
-          path: terraform/landing-zones/${{ inputs.stack }}
+          path: envs/${{ inputs.environment }}/${{ inputs.stack }}
 
       - name: Apply saved plan
         run: terraform apply -input=false -auto-approve tfplan

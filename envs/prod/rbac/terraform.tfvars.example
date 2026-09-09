@@ -23,8 +23,7 @@ hierarchy_role_assignments = {
   }
 }
 
-# Option 2: grant a role only on a specific management group. Add or remove
-# entries as needed; this example grants Reader only on Clinical Systems prod.
+# Option 2: grant a role only on a specific management group.
 role_assignments = {
   mdullah_clinical_prod_reader = {
     management_group_name = "advocate-prod-clinical-systems"
