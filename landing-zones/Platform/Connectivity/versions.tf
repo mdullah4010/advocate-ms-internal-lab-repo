@@ -8,11 +8,7 @@ terraform {
     }
   }
 
-  # Temporary test-branch backend. State exists only in the GitHub-hosted
-  # runner workspace and is destroyed with the test resources in the same job.
-  backend "local" {
-    path = "terraform.tfstate"
-  }
+  backend "azurerm" {}
 }
 
 provider "azurerm" {

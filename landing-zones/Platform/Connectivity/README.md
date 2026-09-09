@@ -10,19 +10,19 @@ This Terraform root deploys an initial hub virtual network into the internal Azu
 
 The example includes reserved subnet names and Azure-compliant minimum sizes for Azure Firewall, VPN/ExpressRoute Gateway, and Azure Bastion. Remove services that are not part of the initial test before deployment.
 
-## Temporary GitHub Actions test
+## Temporary GitHub Actions remote-backend test
 
-This temporary test uses local Terraform state and the GitHub-hosted runner defined in `.github/workflows/terraform-connectivity-local-test.yml`. It is intended only to prove that connectivity resources can be created and deleted and must be manually dispatched from `main`.
+The workflow in `.github/workflows/terraform-connectivity-sh-runner-remote-test.yml` uses the private Azure Storage backend and a self-hosted runner. It deploys, verifies, and destroys test resources from one manually dispatched `main` branch job.
 
-1. Review `terraform/environments/test/connectivity.tfvars`, especially names and non-overlapping CIDR ranges.
-2. Configure `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, and `AZURE_SUBSCRIPTION_ID` as GitHub repository Actions secrets.
-3. Configure the Azure identity with a federated credential whose subject matches the `main` branch token exactly. For this repository, GitHub reports `repo:mdullah4010@169419223/advocate-ms-internal-lab-repo@1353821821:ref:refs/heads/main`.
-4. Grant that identity only the Azure role required to create the test resources in the target subscription or resource group.
-5. Open **Actions**, select **Temporary Connectivity Deployment Test**, choose `main`, enter the confirmation value, and dispatch the workflow.
-6. Confirm that apply, Azure verification, and destroy all succeed.
+1. Review `envs/test/connectivity.tfvars`, especially resource names and non-overlapping CIDR ranges.
+2. Confirm that the self-hosted Linux runner is online with the `terraform-private` label and resolves the state storage hostname to its private endpoint address.
+3. Configure `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, and `AZURE_SUBSCRIPTION_ID` as GitHub Actions secrets.
+4. Configure `TFSTATE_RESOURCE_GROUP`, `TFSTATE_STORAGE_ACCOUNT`, `TFSTATE_CONTAINER`, and `TFSTATE_SUBSCRIPTION_ID` as GitHub Actions variables.
+5. Configure the Azure identity with a federated credential whose subject matches the `main` branch token.
+6. Grant the identity `Storage Blob Data Contributor` on the state container and only the management-plane role required to create the test resources.
+7. Open **Actions**, select **Temporary Connectivity Deployment Test using Self-hosted Runner with Terraform Remote Backend**, choose `main`, enter `DEPLOY-AND-DESTROY`, and dispatch the workflow.
+8. Confirm that remote initialization, plan, apply, Azure and state verification, and destroy all succeed.
 
-Plan, apply, verification, and destroy run in one job because local state exists only in the runner workspace. The workflow always attempts cleanup. If cleanup fails, it retains an emergency state artifact for one day; treat that artifact as sensitive and use it immediately to recover and destroy remaining resources.
-
-Do not use local state for a persistent environment. Replace this temporary workflow and restore the Azure Storage backend before using connectivity deployment code for a persistent environment.
+The dedicated state key is `advocate/test/connectivity-remote-test.tfstate`. Cleanup always runs after successful backend initialization. If cleanup fails, use that remote state immediately to investigate and destroy any remaining resources; never edit or delete the state blob manually.
 
 Do not connect this test hub to production, configure peering, or advertise routes until the address space has been approved by the network team.

@@ -1,0 +1,173 @@
+name: Temporary Connectivity Deployment Test using Self-hosted Runner with Terraform Remote Backend
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Confirm that the test resources may be deployed and destroyed
+        required: true
+        type: choice
+        options:
+          - DEPLOY-AND-DESTROY
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: connectivity-remote-state-test
+  cancel-in-progress: false
+
+jobs:
+  deploy-verify-destroy:
+    name: Deploy, verify, and destroy connectivity
+    runs-on: self-hosted
+    timeout-minutes: 60
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: landing-zones/Platform/Connectivity
+
+    env:
+      ARM_USE_OIDC: "true"
+      ARM_USE_AZUREAD: "true"
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TFVARS_FILE: ${{ github.workspace }}/envs/test/connectivity.tfvars
+      TFSTATE_KEY: advocate/test/connectivity-remote-test.tfstate
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Require main branch
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "This deployment test must be dispatched from the main branch." >&2
+            exit 1
+          fi
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Log in to Azure with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Confirm Azure login and access
+        run: |
+          az account show --query "{Subscription:name,State:state}" --output table
+          az group list --query "[].{ResourceGroup:name,Location:location}" --output table
+
+      - name: Verify test and backend configuration
+        run: |
+          test -f "$TFVARS_FILE" || {
+            echo "Missing test configuration: $TFVARS_FILE" >&2
+            exit 1
+          }
+
+          test -n "${{ vars.TFSTATE_RESOURCE_GROUP }}" || { echo "TFSTATE_RESOURCE_GROUP is not configured." >&2; exit 1; }
+          test -n "${{ vars.TFSTATE_STORAGE_ACCOUNT }}" || { echo "TFSTATE_STORAGE_ACCOUNT is not configured." >&2; exit 1; }
+          test -n "${{ vars.TFSTATE_CONTAINER }}" || { echo "TFSTATE_CONTAINER is not configured." >&2; exit 1; }
+          test -n "${{ vars.TFSTATE_SUBSCRIPTION_ID }}" || { echo "TFSTATE_SUBSCRIPTION_ID is not configured." >&2; exit 1; }
+
+      - name: Verify private backend connectivity
+        run: |
+          backend_host="${{ vars.TFSTATE_STORAGE_ACCOUNT }}.blob.core.windows.net"
+          backend_ip="$(getent ahostsv4 "$backend_host" | awk 'NR == 1 { print $1 }')"
+          echo "$backend_host resolves to $backend_ip"
+
+          if [[ ! "$backend_ip" =~ ^10\. &&
+                ! "$backend_ip" =~ ^192\.168\. &&
+                ! "$backend_ip" =~ ^172\.(1[6-9]|2[0-9]|3[01])\. ]]; then
+            echo "The backend hostname did not resolve to an RFC 1918 private address." >&2
+            exit 1
+          fi
+
+          http_code="$(curl --silent --show-error --output /dev/null \
+            --write-out "%{http_code}" \
+            "https://$backend_host/")"
+          echo "Azure Blob endpoint HTTP status: $http_code"
+          test "$http_code" != "000"
+
+      - name: Check formatting
+        run: terraform fmt -check -recursive "${{ github.workspace }}/landing-zones" "${{ github.workspace }}/modules"
+
+      - name: Initialize remote backend
+        id: init
+        run: >-
+          terraform init -reconfigure -input=false
+          -backend-config="resource_group_name=${{ vars.TFSTATE_RESOURCE_GROUP }}"
+          -backend-config="storage_account_name=${{ vars.TFSTATE_STORAGE_ACCOUNT }}"
+          -backend-config="container_name=${{ vars.TFSTATE_CONTAINER }}"
+          -backend-config="key=$TFSTATE_KEY"
+          -backend-config="subscription_id=${{ vars.TFSTATE_SUBSCRIPTION_ID }}"
+          -backend-config="tenant_id=${{ secrets.AZURE_TENANT_ID }}"
+          -backend-config="use_oidc=true"
+          -backend-config="use_azuread_auth=true"
+
+      - name: Validate
+        run: terraform validate -no-color
+
+      - name: Create saved plan
+        run: terraform plan -input=false -no-color -var-file="$TFVARS_FILE" -out=tfplan
+
+      - name: Apply saved plan
+        id: apply
+        run: terraform apply -input=false -auto-approve tfplan
+
+      - name: Verify deployed virtual network and remote state
+        if: ${{ steps.apply.outcome == 'success' }}
+        run: |
+          terraform output -no-color
+          terraform state list
+
+          az network vnet show \
+            --resource-group "$(terraform output -raw resource_group_name)" \
+            --name "$(terraform output -raw hub_virtual_network_name)" \
+            --query "{name:name,location:location,addressSpace:addressSpace.addressPrefixes,provisioningState:provisioningState}" \
+            --output table
+
+          az storage blob show \
+            --account-name "${{ vars.TFSTATE_STORAGE_ACCOUNT }}" \
+            --container-name "${{ vars.TFSTATE_CONTAINER }}" \
+            --name "$TFSTATE_KEY" \
+            --auth-mode login \
+            --query "{name:name,lastModified:properties.lastModified,leaseStatus:properties.lease.status}" \
+            --output table
+
+      - name: Destroy temporary resources
+        id: cleanup
+        if: ${{ always() && steps.init.outcome == 'success' }}
+        run: |
+          terraform destroy \
+            -input=false \
+            -auto-approve \
+            -var-file="$TFVARS_FILE"
+
+          if [[ -n "$(terraform state list)" ]]; then
+            echo "Remote state still contains managed resources after destroy." >&2
+            terraform state list
+            exit 1
+          fi
+
+      - name: Write job summary
+        if: ${{ always() }}
+        run: |
+          {
+            echo "## Temporary connectivity deployment"
+            echo
+            echo "- Apply result: ${{ steps.apply.outcome }}"
+            echo "- Cleanup result: ${{ steps.cleanup.outcome }}"
+            echo "- Backend: Azure Storage"
+            echo "- State key: $TFSTATE_KEY"
+          } >> "$GITHUB_STEP_SUMMARY"
