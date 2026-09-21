@@ -13,8 +13,3 @@ module "this" {
   } : null
   tags = var.tags
 }
-
-moved {
-  from = azurerm_virtual_network.this
-  to   = module.this.azapi_resource.vnet
-}
