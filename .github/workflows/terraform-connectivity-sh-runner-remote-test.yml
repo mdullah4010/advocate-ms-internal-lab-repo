@@ -27,7 +27,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: landing-zones/Platform/Connectivity
+        working-directory: Platform/Connectivity
 
     env:
       ARM_USE_OIDC: "true"
@@ -54,7 +54,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.9.8"
+          terraform_version: "1.16.1"
 
       - name: Log in to Azure with OIDC
         uses: azure/login@v2
@@ -100,7 +100,7 @@ jobs:
           test "$http_code" != "000"
 
       - name: Check formatting
-        run: terraform fmt -check -recursive "${{ github.workspace }}/landing-zones" "${{ github.workspace }}/modules"
+        run: terraform fmt -check -recursive "${{ github.workspace }}/Platform" "${{ github.workspace }}/modules"
 
       - name: Initialize remote backend
         id: init

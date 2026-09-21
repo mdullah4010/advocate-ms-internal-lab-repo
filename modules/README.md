@@ -4,5 +4,6 @@ Reusable modules shared by the environment deployment roots:
 
 - `management-group`: creates one Azure management group.
 - `role-assignment`: creates one Azure role assignment.
+- `virtual-network`: wraps Azure Verified Module `Azure/avm-res-network-virtualnetwork/azurerm` version `0.22.2` while preserving the repository's existing virtual-network interface.
 
 Production deployment roots are under `envs/prod`. Test roots can be added under `envs/test` using the same relative module paths.

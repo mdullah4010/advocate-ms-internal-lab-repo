@@ -1,5 +1,5 @@
 module "connectivity_resource_group" {
-  source = "../../../modules/resource-group"
+  source = "../../modules/resource-group"
 
   name     = var.resource_group_name
   location = var.location
@@ -7,7 +7,7 @@ module "connectivity_resource_group" {
 }
 
 module "hub_virtual_network" {
-  source = "../../../modules/virtual-network"
+  source = "../../modules/virtual-network"
 
   name                = var.hub_virtual_network_name
   location            = module.connectivity_resource_group.location
@@ -18,7 +18,7 @@ module "hub_virtual_network" {
 }
 
 module "hub_subnet" {
-  source = "../../../modules/subnet"
+  source = "../../modules/subnet"
 
   for_each = var.subnets
 
