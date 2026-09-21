@@ -4,7 +4,7 @@ locals {
 }
 
 module "resource_group" {
-  source = "../../resource-group"
+  source = "../../../resource-group"
 
   name     = local.resource_group_name
   location = var.location
