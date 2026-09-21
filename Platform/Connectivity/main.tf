@@ -1,5 +1,5 @@
 module "connectivity_resource_group" {
-  source = "../../modules/resource-group"
+  source = "../../modules/avm/resource-group"
 
   name     = var.resource_group_name
   location = var.location

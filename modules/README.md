@@ -9,7 +9,7 @@ Reusable Terraform modules shared by the deployment roots in this repository.
 | Name | Source | Description |
 | --- | --- | --- |
 | `management-group` | [`./management-group`](./management-group) | Creates one Azure management group under an existing parent management group. |
-| `resource-group` | [`./resource-group`](./resource-group) | Creates one Azure resource group. |
+| `resource-group` | [`./avm/resource-group`](./avm/resource-group) | Wraps the Azure Verified Resource Group Module version `0.4.0`. |
 | `role-assignment` | [`./role-assignment`](./role-assignment) | Creates one Azure role assignment at a specified scope. |
 | `subnet` | [`./subnet`](./subnet) | Creates one subnet in an existing virtual network. |
 | `virtual-network` | [`./avm/virtual-network`](./avm/virtual-network) | Wraps the Azure Verified Virtual Network Module version `0.22.2`. |
@@ -39,11 +39,28 @@ Reusable Terraform modules shared by the deployment roots in this repository.
 
 ## Resource group
 
-### Resources
+This wrapper preserves the repository's resource-group interface while using [`Azure/avm-res-resources-resourcegroup/azurerm`](https://registry.terraform.io/modules/Azure/avm-res-resources-resourcegroup/azurerm/0.4.0) version `0.4.0`.
 
-| Name | Type |
+### Requirements
+
+| Name | Version |
 | --- | --- |
-| `azurerm_resource_group.this` | resource |
+| Terraform | `>= 1.9, < 2.0` |
+| Azure Resource Group AVM | `0.4.0` |
+
+### Providers
+
+| Name | Version |
+| --- | --- |
+| `azapi` | `~> 2.4` |
+| `modtm` | `~> 0.3` |
+| `random` | `~> 3.5` |
+
+### Modules
+
+| Name | Source | Version |
+| --- | --- | --- |
+| `this` | `Azure/avm-res-resources-resourcegroup/azurerm` | `0.4.0` |
 
 ### Inputs
 
