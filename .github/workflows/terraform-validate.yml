@@ -1,12 +1,12 @@
 name: Terraform Validate
 
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - "envs/**"
-      - "modules/**"
-      - ".github/workflows/terraform-*.yml"
+  # pull_request:
+  #   branches: [main]
+  #   paths:
+  #     - "envs/**"
+  #     - "modules/**"
+  #     - ".github/workflows/terraform-*.yml"
   workflow_dispatch:
 
 permissions:
