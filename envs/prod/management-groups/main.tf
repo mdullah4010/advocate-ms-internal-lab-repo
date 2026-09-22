@@ -1,5 +1,5 @@
 module "advocate" {
-  source = "../../modules/management-group"
+  source = "../../../modules/custom/management-group"
 
   name                       = var.management_group_prefix
   display_name               = "Advocate"
@@ -7,7 +7,7 @@ module "advocate" {
 }
 
 module "top_level" {
-  source = "../../modules/management-group"
+  source = "../../../modules/custom/management-group"
 
   for_each = {
     platform       = "Platform"
@@ -23,7 +23,7 @@ module "top_level" {
 }
 
 module "platform_child" {
-  source = "../../modules/management-group"
+  source = "../../../modules/custom/management-group"
 
   for_each = local.platform_children
 
@@ -33,7 +33,7 @@ module "platform_child" {
 }
 
 module "workload_environment" {
-  source = "../../modules/management-group"
+  source = "../../../modules/custom/management-group"
 
   for_each = {
     production     = "Production"
@@ -46,7 +46,7 @@ module "workload_environment" {
 }
 
 module "production_category" {
-  source = "../../modules/management-group"
+  source = "../../../modules/custom/management-group"
 
   for_each = local.workload_categories
 
@@ -56,7 +56,7 @@ module "production_category" {
 }
 
 module "nonproduction_category" {
-  source = "../../modules/management-group"
+  source = "../../../modules/custom/management-group"
 
   for_each = local.workload_categories
 
@@ -66,7 +66,7 @@ module "nonproduction_category" {
 }
 
 module "consolidation_child" {
-  source = "../../modules/management-group"
+  source = "../../../modules/custom/management-group"
 
   for_each = local.consolidation_children
 
@@ -76,7 +76,7 @@ module "consolidation_child" {
 }
 
 module "consolidation_environment" {
-  source = "../../modules/management-group"
+  source = "../../../modules/custom/management-group"
 
   for_each = local.consolidation_environments
 

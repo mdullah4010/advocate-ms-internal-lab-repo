@@ -35,9 +35,25 @@ variable "test_run_id" {
 }
 
 variable "address_space" {
-  description = "CIDR address spaces assigned to the test virtual network."
+  description = "CIDR address spaces assigned to the primary test virtual network."
   type        = list(string)
   default     = ["10.250.0.0/16"]
+
+  validation {
+    condition     = length(var.address_space) > 0 && alltrue([for cidr in var.address_space : can(cidrhost(cidr, 0))])
+    error_message = "Provide at least one valid CIDR address space for the primary virtual network."
+  }
+}
+
+variable "peer_address_space" {
+  description = "CIDR address spaces assigned to the secondary peered test virtual network."
+  type        = list(string)
+  default     = ["10.251.0.0/16"]
+
+  validation {
+    condition     = length(var.peer_address_space) > 0 && alltrue([for cidr in var.peer_address_space : can(cidrhost(cidr, 0))])
+    error_message = "Provide at least one valid CIDR address space for the secondary virtual network."
+  }
 }
 
 variable "dns_servers" {

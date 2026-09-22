@@ -9,12 +9,14 @@ module "connectivity_resource_group" {
 module "hub_virtual_network" {
   source = "../../modules/avm/virtual-network"
 
-  name                = var.hub_virtual_network_name
-  location            = module.connectivity_resource_group.location
-  resource_group_name = module.connectivity_resource_group.name
-  address_space       = var.hub_address_space
-  dns_servers         = var.dns_servers
-  tags                = var.tags
+  name          = var.hub_virtual_network_name
+  location      = module.connectivity_resource_group.location
+  parent_id     = module.connectivity_resource_group.id
+  address_space = var.hub_address_space
+  dns_servers = length(var.dns_servers) > 0 ? {
+    dns_servers = var.dns_servers
+  } : null
+  tags = var.tags
 }
 
 module "hub_subnet" {
