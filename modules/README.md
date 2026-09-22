@@ -1,5 +1,7 @@
 ## Module development guidelines
 
+Module development progress is tracked in the [Advocate Health Azure Landing Zones Module Tracker](https://microsoft.sharepoint.com/:x:/t/CT-51961/cQp8MYlee3N2QJV7M3X95d7xEgUCe4KCc-YgizjCUC6mKREzQg). Update the tracker when module development starts, its status changes, or work is completed.
+
 ### Module selection
 
 1. Check the official [Azure Verified Modules](https://azure.github.io/Azure-Verified-Modules/) catalog before developing or materially updating an Azure resource module.
@@ -19,12 +21,30 @@ modules/
 ├── avm/
 │   └── <module-name>/
 └── custom/
-	└── <module-name>/
+    └── <module-name>/
 ```
 
 ### Wrapper design
 
-- Keep wrappers focused on repository-specific defaults, validation, naming, and a stable consumer interface.
+- Use the following standard structure for every module:
+
+```text
+<module-name>/
+├── main.tf
+├── variables.tf
+├── outputs.tf
+└── test/
+    ├── main.tf
+    ├── variables.tf
+    ├── outputs.tf
+    ├── versions.tf
+    └── test.auto.tfvars.example
+```
+
+- `main.tf` defines the upstream AVM call or custom Azure resources.
+- `variables.tf` defines all required and optional module inputs.
+- `outputs.tf` exposes relevant resource identifiers and properties.
+- `test/` contains an independently deployable Terraform root used by the module test workflow.
 - Expose all required and optional inputs supported by the upstream AVM so consumers can configure the complete module capability while deployment requirements are still being defined. Preserve the upstream input types, defaults, validation behavior, and descriptions wherever possible.
 - Declare clear variable descriptions, types, defaults, and validation rules.
 - Pin module versions explicitly and use provider constraints compatible with the selected AVM version.
@@ -32,6 +52,8 @@ modules/
 
 ### Testing and validation
 
+- Develop module changes in a feature branch and merge them into `main` only after development, review, and local validation are complete.
+- The module deployment workflow currently runs only from `main`. Deployment testing with the workflow is therefore available only after the feature branch has been merged.
 - Add deployable test code under `modules/<category>/<module-name>/test`.
 - Test roots used by the central workflow must accept `tenant_id`, `subscription_id`, `location`, and `test_run_id` variables and declare an AzureRM backend.
 - Derive temporary resource names from `test_run_id` to prevent collisions between workflow runs.
