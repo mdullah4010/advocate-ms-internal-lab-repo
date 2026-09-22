@@ -1,4 +1,4 @@
-name: (Draft)Terraform Module Test with Destroy Approval
+name: Terraform Module Deployment Test with Destroy Approval
 
 on:
   workflow_dispatch:

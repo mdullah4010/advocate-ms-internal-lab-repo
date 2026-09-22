@@ -53,9 +53,27 @@ modules/
 ### Testing and validation
 
 - Develop module changes in a feature branch and merge them into `main` only after development, review, and local validation are complete.
-- The module deployment workflow currently runs only from `main`. Deployment testing with the workflow is therefore available only after the feature branch has been merged.
+- The module deployment workflows run only from `main`. Deployment testing with either workflow is therefore available only after the feature branch has been merged.
 - Add deployable test code under `modules/<category>/<module-name>/test`.
 - Test roots used by the central workflow must accept `tenant_id`, `subscription_id`, `location`, and `test_run_id` variables and declare an AzureRM backend.
 - Derive temporary resource names from `test_run_id` to prevent collisions between workflow runs.
-- Run the central module workflow with the category-qualified path, such as `avm/virtual-network` or `custom/<module-name>`.
 - Run `terraform fmt`, `terraform init`, `terraform validate`, and review a Terraform plan before merging.
+
+#### Module deployment test workflows
+
+Both workflows are started manually from the **Actions** tab with **Run workflow**. Select the `main` branch and supply the category-qualified `module_name`, such as `avm/virtual-network` or `custom/<module-name>`. Each workflow formats and validates the module, creates and applies a saved plan, verifies the module outputs and remote state, and then destroys the temporary resources.
+
+Choose the workflow based on the required cleanup behavior:
+
+| Workflow | Confirmation | Destroy behavior | Recommended use |
+| --- | --- | --- | --- |
+| [Terraform Module Deployment Test](../.github/workflows/terraform-module-test.yml) (`terraform-module-test`) | `DEPLOY-AND-DESTROY` | Runs destroy automatically after initialization, including when a later deployment or verification step fails. | Default option for routine module testing and short-lived resources. |
+| [Terraform Module Deployment Test with Destroy Approval](../.github/workflows/terraform-module-test-with-destroy-approval.yml) (`terraform-module-test-with-destroy-approval`) | `DEPLOY` | Pauses before destroy until an authorized reviewer approves the `terraform-module-destroy` environment. | Use when resources must remain available temporarily for inspection or manual verification. |
+
+Guidelines:
+
+- Prefer `terraform-module-test` unless the deployed resources need to be inspected before cleanup.
+- Do not start both workflows for the same module at the same time. They share a concurrency group and remote-state key for that module.
+- When using the approval-gated workflow `terraform-module-test-with-destroy-approval`, review the deployed resources promptly and approve the destroy job when inspection is complete. Resources remain deployed, may incur Azure charges, and are not cleaned up until approval is granted.
+- Review the workflow summary and confirm that cleanup succeeded and the remote state contains no managed resources.
+- If a workflow is cancelled, rejected, or fails before cleanup completes, treat the resources as still deployed. Investigate the workflow and remote state, then complete cleanup before starting another test for that module.
