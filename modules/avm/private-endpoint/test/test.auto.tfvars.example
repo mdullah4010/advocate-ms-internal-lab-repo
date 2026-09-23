@@ -1,0 +1,10 @@
+tenant_id       = "00000000-0000-0000-0000-000000000000"
+subscription_id = "00000000-0000-0000-0000-000000000000"
+location        = "westus3"
+test_run_id     = "local-001"
+address_space   = ["10.252.0.0/16"]
+tags = {
+  environment = "test"
+  managedBy   = "terraform"
+  purpose     = "private-endpoint-module-test"
+}
