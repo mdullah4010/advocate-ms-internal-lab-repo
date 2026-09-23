@@ -5,7 +5,7 @@ location    = "westus3"
 test_run_id = "local-001"
 
 tags = {
-	environment = "test"
-	managedBy   = "terraform"
-	purpose     = "ddos-protection-module-test"
+  environment = "test"
+  managedBy   = "terraform"
+  purpose     = "ddos-protection-module-test"
 }

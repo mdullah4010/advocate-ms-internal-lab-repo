@@ -14,6 +14,6 @@ output "ddos_protection_plan_id" {
 }
 
 output "ddos_protection_plan_name" {
-	description = "Name of the test DDoS protection plan."
-	value       = module.ddos_protection.name
+  description = "Name of the test DDoS protection plan."
+  value       = module.ddos_protection.name
 }
