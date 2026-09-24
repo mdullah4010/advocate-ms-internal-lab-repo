@@ -46,3 +46,14 @@ variable "tags" {
     purpose     = "public-ip-module-test"
   }
 }
+
+variable "ddos_protection_mode" {
+  description = "DDoS protection mode for the public IP address."
+  type        = string
+  default     = "VirtualNetworkInherited"
+
+  validation {
+    condition     = var.ddos_protection_mode == null || contains(["Enabled", "Disabled"], var.ddos_protection_mode)
+    error_message = "ddos_protection_mode must be Enabled, Disabled, or null."
+  }
+}

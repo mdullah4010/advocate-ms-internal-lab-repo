@@ -12,7 +12,7 @@ variable "allocation_method" {
 variable "ddos_protection_mode" {
   description = "DDoS protection mode for the public IP address."
   type        = string
-  default     = null
+  default     = "VirtualNetworkInherited"
 
   validation {
     condition     = var.ddos_protection_mode == null || contains(["Enabled", "Disabled"], var.ddos_protection_mode)
@@ -217,5 +217,9 @@ variable "tags" {
 variable "zones" {
   description = "Availability zones for the public IP address."
   type        = set(string)
-  default     = null
+  default     = [
+  1,
+  2,
+  3
+]
 }
