@@ -53,7 +53,7 @@ variable "ddos_protection_mode" {
   default     = "VirtualNetworkInherited"
 
   validation {
-    condition     = var.ddos_protection_mode == null || contains(["Enabled", "Disabled"], var.ddos_protection_mode)
+    condition     = var.ddos_protection_mode == null || contains(["Enabled", "Disabled", "VirtualNetworkInherited"], var.ddos_protection_mode)
     error_message = "ddos_protection_mode must be Enabled, Disabled, or null."
   }
 }
