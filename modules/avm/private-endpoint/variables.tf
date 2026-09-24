@@ -5,8 +5,18 @@ variable "location" {
 }
 
 variable "name" {
-  description = "Name of the private endpoint."
+  description = "Enterprise-generated name of the private endpoint."
   type        = string
+  nullable    = false
+
+  validation {
+    condition = (
+      length(var.name) >= 2 &&
+      length(var.name) <= 64 &&
+      can(regex("^[A-Za-z0-9](?:[A-Za-z0-9._-]{0,62}[A-Za-z0-9_])?$", var.name))
+    )
+    error_message = "Private endpoint name must be 2-64 characters, begin with an alphanumeric character, and end with an alphanumeric character or underscore."
+  }
 }
 
 variable "network_interface_name" {
@@ -107,7 +117,12 @@ variable "subresource_names" {
 }
 
 variable "tags" {
-  description = "Tags applied to the private endpoint."
+  description = "Mandatory and additional tags applied to the private endpoint."
   type        = map(string)
-  default     = null
+  nullable    = false
+
+  validation {
+    condition     = length(var.tags) > 0
+    error_message = "At least one tag must be provided."
+  }
 }
