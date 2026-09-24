@@ -45,13 +45,13 @@ variable "address_space" {
   }
 }
 
-variable "virtual_network_link_resolution_policy_default" {
-  description = "Default resolution policy for the private DNS zone virtual network link."
+variable "virtual_network_link_resolution_policy" {
+  description = "Resolution policy for the private DNS zone virtual network link."
   type        = string
   default     = "Default"
 
   validation {
-    condition     = contains(["Default", "NxDomainRedirect"], var.virtual_network_link_resolution_policy_default)
+    condition     = contains(["Default", "NxDomainRedirect"], var.virtual_network_link_resolution_policy)
     error_message = "Resolution policy must be Default or NxDomainRedirect."
   }
 }

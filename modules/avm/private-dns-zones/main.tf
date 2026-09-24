@@ -1,24 +1,24 @@
 module "this" {
-  source  = "Azure/avm-ptn-network-private-link-private-dns-zones/azurerm"
-  version = "0.23.2"
+  source  = "Azure/avm-res-network-privatednszone/azurerm"
+  version = "0.5.0"
 
-  location                                                   = var.location
-  parent_id                                                  = var.parent_id
-  enable_telemetry                                           = var.enable_telemetry
-  lock                                                       = var.lock
-  private_link_excluded_zones                                = var.private_link_excluded_zones
-  private_link_private_dns_zones                             = var.private_link_private_dns_zones
-  private_link_private_dns_zones_additional                  = var.private_link_private_dns_zone_additional
-  private_link_private_dns_zones_regex_filter                = var.private_link_private_dns_zone_regex_filter
-  resource_group_role_assignments                            = var.resource_group_role_assignments
-  tags                                                       = var.tags
-  timeouts                                                   = var.timeouts
-  virtual_network_link_additional_virtual_networks           = var.virtual_network_link_additional_virtual_networks
-  virtual_network_link_by_zone_and_virtual_network           = var.virtual_network_link_by_zone_and_virtual_network
-  virtual_network_link_default_virtual_networks              = var.virtual_network_link_default_virtual_networks
-  virtual_network_link_name_template                         = var.virtual_network_link_name_template
-  virtual_network_link_overrides_by_virtual_network          = var.virtual_network_link_overrides_by_virtual_network
-  virtual_network_link_overrides_by_zone                     = var.virtual_network_link_overrides_by_zone
-  virtual_network_link_overrides_by_zone_and_virtual_network = var.virtual_network_link_overrides_by_zone_and_virtual_network
-  virtual_network_link_resolution_policy_default             = var.virtual_network_link_resolution_policy_default
-}
+  domain_name = var.domain_name
+  parent_id   = var.parent_id
+
+  enable_telemetry = var.enable_telemetry
+  lock       = var.lock
+  a_records  = var.a_records
+  aaaa_records = var.aaaa_records
+  cname_records = var.cname_records
+  mx_records = var.mx_records
+  ptr_records = var.ptr_records
+  retry = var.retry
+  role_assignment_name_use_random_uuid = var.role_assignment_name_use_random_uuid
+  role_assignments = var.role_assignments
+  soa_record = var.soa_record
+  srv_records = var.srv_records
+  tags = var.tags
+  timeouts = var.timeouts
+  txt_records = var.txt_records
+  virtual_network_links = var.virtual_network_links
+  }
