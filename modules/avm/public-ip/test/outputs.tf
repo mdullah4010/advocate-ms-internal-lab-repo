@@ -13,12 +13,7 @@ output "public_ip_id" {
   value       = module.public_ip.id
 }
 
-output "public_ip_name" {
-  description = "Name of the test public IP address."
-  value       = module.public_ip.name
-}
-
-output "ip_address" {
+output "public_ip_address" {
   description = "Allocated test public IP address."
-  value       = module.public_ip.ip_address
+  value       = module.public_ip.public_ip_address
 }
