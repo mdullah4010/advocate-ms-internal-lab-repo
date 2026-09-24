@@ -217,9 +217,9 @@ variable "tags" {
 variable "zones" {
   description = "Availability zones for the public IP address."
   type        = set(string)
-  default     = [
-  1,
-  2,
-  3
-]
+  default = [
+    1,
+    2,
+    3
+  ]
 }
