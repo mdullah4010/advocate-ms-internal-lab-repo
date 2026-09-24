@@ -10,7 +10,7 @@ output "resource_group_name" {
 
 output "public_ip_id" {
   description = "Resource ID of the test public IP address."
-  value       = module.public_ip.id
+  value       = module.public_ip.public_ip_id
 }
 
 output "public_ip_address" {
