@@ -1,6 +1,6 @@
 output "public_ip_id" {
   description = "The ID of the created public IP address"
-  value       = module.this.resource_id
+  value       = module.this.public_ip_id
 }
 
 output "name" {
