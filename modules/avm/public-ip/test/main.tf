@@ -14,11 +14,11 @@ module "resource_group" {
 module "public_ip" {
   source = "./.."
 
-  name              = local.public_ip_name
-  location          = module.resource_group.location
+  name                = local.public_ip_name
+  location            = module.resource_group.location
   resource_group_name = module.resource_group.name
-  allocation_method = var.allocation_method
-  sku               = var.sku
-  sku_tier          = var.sku_tier
-  tags              = var.tags
+  allocation_method   = var.allocation_method
+  sku                 = var.sku
+  sku_tier            = var.sku_tier
+  tags                = var.tags
 }
