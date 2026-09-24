@@ -10,7 +10,7 @@ output "name" {
 
 output "public_ip_address" {
   description = "The assigned IP address of the public IP"
-  value       = module.this.ip_address
+  value       = module.this.public_ip_address
 }
 
 output "resource_id" {
