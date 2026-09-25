@@ -74,6 +74,17 @@ variable "forwarding_rule_destination_ip_addresses" {
   }
 }
 
+variable "resolver_teardown_delay" {
+  description = "Pause applied on destroy after the resolver is removed, giving Azure time to release the dnsResolverLink before the subnets are deleted."
+  type        = string
+  default     = "300s"
+
+  validation {
+    condition     = can(regex("^[0-9]+(s|m|h)$", var.resolver_teardown_delay))
+    error_message = "Teardown delay must be a duration such as 300s, 5m, or 1h."
+  }
+}
+
 variable "tags" {
   description = "Tags applied to the temporary test resources."
   type        = map(string)

@@ -9,6 +9,8 @@ forwarding_rule_destination_ip_addresses = {
   "10.10.0.4" = "53"
 }
 
+resolver_teardown_delay = "300s"
+
 tags = {
   environment = "test"
   managedBy   = "terraform"
