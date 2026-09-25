@@ -18,6 +18,11 @@ locals {
   resolver_subnet_retry = {
     error_message_regex = ["ReferencedResourceNotProvisioned", "InUseSubnetCannotBeDeleted"]
   }
+
+  # Bounds the retry loop above so a stuck link fails the run instead of hanging.
+  resolver_subnet_timeouts = {
+    delete = "10m"
+  }
 }
 
 module "resource_group" {
@@ -41,19 +46,31 @@ module "virtual_network" {
       address_prefixes = [cidrsubnet(var.address_space[0], 12, 0)]
       delegations      = local.resolver_delegation
       retry            = local.resolver_subnet_retry
+      timeouts         = local.resolver_subnet_timeouts
     }
     outbound = {
       name             = local.outbound_subnet_name
       address_prefixes = [cidrsubnet(var.address_space[0], 12, 1)]
       delegations      = local.resolver_delegation
       retry            = local.resolver_subnet_retry
+      timeouts         = local.resolver_subnet_timeouts
     }
   }
   tags = var.tags
 }
 
+# Sits between the virtual network and the resolver so that on destroy the delay
+# elapses after the resolver is gone but before the subnets are deleted.
+resource "time_sleep" "resolver_teardown" {
+  depends_on = [module.virtual_network]
+
+  destroy_duration = var.resolver_teardown_delay
+}
+
 module "private_dns_resolver" {
   source = "./.."
+
+  depends_on = [time_sleep.resolver_teardown]
 
   name                        = local.private_dns_resolver_name
   location                    = module.resource_group.location
