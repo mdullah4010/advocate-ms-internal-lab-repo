@@ -19,22 +19,6 @@ variable "location" {
   nullable    = false
 }
 
-variable "name" {
-  type        = string
-  description = "Name of public IP address resource"
-  nullable    = false
-  validation {
-    condition     = can(regex("^[a-zA-Z0-9]([a-zA-Z0-9._-]{0,78}[a-zA-Z0-9_])?$", var.name))
-    error_message = "The name must be between 3 and 24 characters long and can only contain lowercase letters, numbers and dashes."
-  }
-}
-
-# This is required for most resource modules
-variable "resource_group_name" {
-  type        = string
-  description = "The resource group where the resources will be deployed."
-}
-
 variable "allocation_method" {
   type        = string
   default     = "Static"
