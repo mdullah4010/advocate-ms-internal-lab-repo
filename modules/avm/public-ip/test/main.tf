@@ -14,7 +14,7 @@ module "resource_group" {
 module "public_ip" {
   source = "./.."
 
-  name                = local.public_ip_name
+  name                = var.name
   location            = module.resource_group.location
   resource_group_name = module.resource_group.name
   allocation_method   = var.allocation_method
