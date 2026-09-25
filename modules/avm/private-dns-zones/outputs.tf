@@ -15,23 +15,23 @@ output "mx_record_outputs" {
   value       = module.this.mx_record_output
 }
 
-output "name"{
-    description = "Name of Private DNS zone."
-    value       = module.this.name
+output "name" {
+  description = "Name of Private DNS zone."
+  value       = module.this.name
 }
 output "ptr_record_outputs" {
   description = "Output for PTR record configuration of the private DNS zones."
   value       = module.this.ptr_record_output
 }
 
-output "resource"{
-    description = "Output for the resource configuration of the private DNS zones."
-    value       = module.this.resource
+output "resource" {
+  description = "Output for the resource configuration of the private DNS zones."
+  value       = module.this.resource
 }
 
-output "resource_id"{
-    description = "Output for the resource ID of the private DNS zones."
-    value       = module.this.resource_id
+output "resource_id" {
+  description = "Output for the resource ID of the private DNS zones."
+  value       = module.this.resource_id
 }
 output "soa_record_outputs" {
   description = "Output for SOA record configuration of the private DNS zones."
