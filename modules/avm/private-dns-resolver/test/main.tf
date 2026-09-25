@@ -12,6 +12,12 @@ locals {
       name = "Microsoft.Network/dnsResolvers"
     }
   }]
+
+  # Azure removes the dnsResolverLink service association link asynchronously,
+  # so subnet deletion is rejected until that cleanup completes.
+  resolver_subnet_retry = {
+    error_message_regex = ["ReferencedResourceNotProvisioned", "InUseSubnetCannotBeDeleted"]
+  }
 }
 
 module "resource_group" {
@@ -34,11 +40,13 @@ module "virtual_network" {
       name             = local.inbound_subnet_name
       address_prefixes = [cidrsubnet(var.address_space[0], 12, 0)]
       delegations      = local.resolver_delegation
+      retry            = local.resolver_subnet_retry
     }
     outbound = {
       name             = local.outbound_subnet_name
       address_prefixes = [cidrsubnet(var.address_space[0], 12, 1)]
       delegations      = local.resolver_delegation
+      retry            = local.resolver_subnet_retry
     }
   }
   tags = var.tags
