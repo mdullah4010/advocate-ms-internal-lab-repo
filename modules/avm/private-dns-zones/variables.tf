@@ -10,13 +10,13 @@ variable "parent_id" {
 
 variable "a_records" {
   description = "Controls whether an A record is created for the private DNS zones."
-  type        = map(object({
+  type = map(object({
     name         = string
     ttl          = number
     records      = optional(list(string))
     ip_addresses = optional(set(string), null)
   }))
-  default     = {}
+  default = {}
 }
 
 variable "aaaa_records" {
@@ -27,24 +27,24 @@ variable "aaaa_records" {
     records      = optional(list(string))
     ip_addresses = optional(set(string), null)
   }))
-  default     = {}
+  default = {}
 }
 
 variable "cname_records" {
   description = "Controls whether a CNAME record is created for the private DNS zones."
-  type        = map(object({
+  type = map(object({
     name   = string
     ttl    = number
     record = optional(string, null)
     cname  = optional(string, null)
   }))
-  default     = {}
+  default = {}
 }
 
 variable "enable_telemetry" {
   description = "Controls whether telemetry is enabled for the private DNS zones."
-  type = bool
-  default = true
+  type        = bool
+  default     = true
 }
 
 variable "lock" {
@@ -82,20 +82,20 @@ variable "ptr_records" {
 
 variable "retry" {
   description = "Retry configuration for the resource operations."
-  type        = object({
+  type = object({
     error_message_regex  = optional(list(string), ["ReferencedResourceNotProvisioned", "CannotDeleteResource"])
     interval_seconds     = optional(number, 10)
     max_interval_seconds = optional(number, 180)
     multiplier           = optional(number, 1.5)
     randomization_factor = optional(number, 0.5)
   })
-  default     = {}
+  default = {}
 }
 
 variable "role_assignment_name_use_random_uuid" {
   description = "Controls whether role assignments use a random UUID for their names."
-  type = bool
-  default = true
+  type        = bool
+  default     = true
 }
 
 variable "role_assignments" {
