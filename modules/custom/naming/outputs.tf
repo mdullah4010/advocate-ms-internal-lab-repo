@@ -20,8 +20,14 @@ output "abbreviation" {
 
 output "tokens" {
   description = "Ordered tokens used by the selected naming pattern."
-  value = var.resource_type == "management_group" ? [var.org_code, var.workload] : (
-    var.resource_type == "resource_group" ? local.resource_group_tokens : local.standard_tokens
+  value = (
+    var.resource_type == "management_group" ? [var.org_code, var.workload] :
+    var.resource_type == "storage_account" ? local.storage_account_tokens :
+    contains(local.governance_resources, var.resource_type) ? local.governance_tokens :
+    contains(local.identity_display_resources, var.resource_type) ? local.identity_tokens :
+    contains(local.extended_resources, var.resource_type) ? local.extended_tokens :
+    contains(local.purpose_only_resources, var.resource_type) ? local.purpose_tokens :
+    local.standard_tokens
   )
 }
 

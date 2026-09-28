@@ -26,8 +26,13 @@ Set `purpose` to use the extended pattern. Set `uniqueness_suffix` only to an ap
 Special patterns:
 
 - `management_group`: `<org>-<workload>`
-- `resource_group`: `<org>-rg-<workload>-<purpose?>-<region>-<environment>-<instance>`
-- `container_registry` and `storage_account`: separator-free constrained pattern
+- Function/workload resources: `<org>-<resource>-<workload>-<region>-<environment>-<instance>`
+- Purpose/target resources: `<org>-<resource>-<purpose>-<region>-<environment>-<instance>`
+- `resource_group`, `network_security_group`, and `subnet`: `<org>-<resource>-<workload>-<purpose>-<region>-<environment>-<instance>`
+- Policy resources: `<org>-<resource>-<workload>-<purpose>`
+- Application registrations and service principals omit the region token.
+- `container_registry` uses a separator-free constrained form of the workload pattern.
+- `storage_account` uses `<org>st<purpose><region><environment><instance>`.
 
 Private DNS zone names are not generated because the standard defines them as provider-controlled service exceptions.
 

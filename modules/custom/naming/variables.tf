@@ -70,16 +70,49 @@ variable "organization_codes" {
 variable "workload" {
   description = "Approved lowercase workload or platform-function code."
   type        = string
+  default     = null
 
   validation {
-    condition     = can(regex("^[a-z0-9]+$", var.workload)) && contains(var.workload_codes, var.workload)
-    error_message = "workload must contain only lowercase letters and numbers and must exist in workload_codes."
+    condition     = var.workload == null ? true : can(regex("^[a-z0-9]+$", var.workload)) && contains(var.workload_codes, var.workload)
+    error_message = "workload must be null or contain only lowercase letters and numbers and exist in workload_codes."
+  }
+
+  validation {
+    condition = contains([
+      "action_group",
+      "automation_account",
+      "backup_vault",
+      "data_collection_rule",
+      "managed_devops_pool",
+      "managed_identity",
+      "private_endpoint",
+      "public_ip",
+      "recovery_services_vault",
+      "storage_account",
+    ], var.resource_type) || var.workload != null
+    error_message = "workload is required for resource types whose Advocate Health pattern includes a workload or platform-function token."
   }
 }
 
 variable "workload_codes" {
   description = "Controlled registry of approved lowercase workload and platform-function codes."
   type        = set(string)
+  default = [
+    "clinical",
+    "collab",
+    "connect",
+    "data",
+    "decom",
+    "entapp",
+    "identity",
+    "management",
+    "platform",
+    "research",
+    "sandbox",
+    "secops",
+    "shared",
+    "vending",
+  ]
 
   validation {
     condition     = length(var.workload_codes) > 0 && alltrue([for code in var.workload_codes : can(regex("^[a-z0-9]+$", code))])
@@ -93,8 +126,44 @@ variable "purpose" {
   default     = null
 
   validation {
-    condition     = (var.purpose == null || can(regex("^[a-z0-9]+$", var.purpose))) && (var.resource_type != "resource_group" || var.purpose != null)
-    error_message = "purpose must contain only lowercase letters and numbers and is required for resource_group names."
+    condition     = var.purpose == null ? true : can(regex("^[a-z0-9]+$", var.purpose)) && contains(var.purpose_codes, var.purpose)
+    error_message = "purpose must be null or contain only lowercase letters and numbers and exist in purpose_codes."
+  }
+
+  validation {
+    condition = !contains([
+      "action_group",
+      "application_registration",
+      "automation_account",
+      "backup_vault",
+      "data_collection_rule",
+      "managed_devops_pool",
+      "managed_identity",
+      "network_security_group",
+      "policy_assignment",
+      "policy_definition",
+      "policy_exemption",
+      "policy_initiative",
+      "private_endpoint",
+      "public_ip",
+      "recovery_services_vault",
+      "resource_group",
+      "service_principal",
+      "storage_account",
+      "subnet",
+    ], var.resource_type) || var.purpose != null
+    error_message = "purpose is required for resource types whose Advocate Health pattern includes a purpose, target, category, control, or scope token."
+  }
+}
+
+variable "purpose_codes" {
+  description = "Controlled registry of approved lowercase purpose, target, category, control, and scope codes."
+  type        = set(string)
+  default     = []
+
+  validation {
+    condition     = alltrue([for code in var.purpose_codes : can(regex("^[a-z0-9]+$", code))])
+    error_message = "Every purpose_codes entry must use only lowercase letters and numbers."
   }
 }
 

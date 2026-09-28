@@ -28,6 +28,7 @@ run "extended_resource_group_name" {
     workload           = "platform"
     workload_codes     = ["platform"]
     purpose            = "connect"
+    purpose_codes      = ["connect"]
     region_code        = "eus2"
     environment_code   = "azp"
     instance           = 2
@@ -46,8 +47,8 @@ run "constrained_storage_account_name" {
     resource_type      = "storage_account"
     org_code           = "ah"
     organization_codes = ["ah"]
-    workload           = "tfstate"
-    workload_codes     = ["tfstate"]
+    purpose            = "tfstate"
+    purpose_codes      = ["tfstate"]
     region_code        = "eus2"
     environment_code   = "azp"
     instance           = 1
@@ -135,6 +136,26 @@ run "require_resource_group_purpose" {
   expect_failures = [var.purpose]
 }
 
+run "purpose_based_public_ip_name" {
+  command = plan
+
+  variables {
+    resource_type      = "public_ip"
+    org_code           = "contoso"
+    organization_codes = ["contoso"]
+    purpose            = "firewall"
+    purpose_codes      = ["firewall"]
+    region_code        = "eus2"
+    environment_code   = "azp"
+    instance           = 1
+  }
+
+  assert {
+    condition     = output.name == "contoso-pip-firewall-eus2-azp-01"
+    error_message = "The public IP pattern must use purpose without a workload token."
+  }
+}
+
 run "reject_overlength_key_vault_name" {
   command = plan
 
@@ -145,6 +166,7 @@ run "reject_overlength_key_vault_name" {
     workload           = "platform"
     workload_codes     = ["platform"]
     purpose            = "encryption"
+    purpose_codes      = ["encryption"]
     region_code        = "eus2"
     environment_code   = "azp"
     instance           = 1

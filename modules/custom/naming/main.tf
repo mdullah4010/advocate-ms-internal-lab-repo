@@ -81,15 +81,52 @@ locals {
     virtual_network_gateway          = { min = 1, max = 80, pattern = "^[a-z0-9]([a-z0-9._-]*[a-z0-9_])?$" }
   }
 
-  abbreviation          = local.resource_abbreviations[var.resource_type]
-  instance_code         = format("%02d", var.instance)
-  standard_tokens       = concat([var.org_code, local.abbreviation, var.workload], var.purpose == null ? [] : [var.purpose], [var.region_code, var.environment_code, local.instance_code], var.uniqueness_suffix == null ? [] : [var.uniqueness_suffix])
-  resource_group_tokens = concat([var.org_code, "rg", var.workload], var.purpose == null ? [] : [var.purpose], [var.region_code, var.environment_code, local.instance_code], var.uniqueness_suffix == null ? [] : [var.uniqueness_suffix])
+  abbreviation  = local.resource_abbreviations[var.resource_type]
+  instance_code = format("%02d", var.instance)
+  suffix_tokens = concat([local.instance_code], var.uniqueness_suffix == null ? [] : [var.uniqueness_suffix])
+
+  purpose_only_resources = [
+    "action_group",
+    "automation_account",
+    "backup_vault",
+    "data_collection_rule",
+    "managed_devops_pool",
+    "managed_identity",
+    "private_endpoint",
+    "public_ip",
+    "recovery_services_vault",
+  ]
+  extended_resources = [
+    "network_security_group",
+    "resource_group",
+    "subnet",
+  ]
+  governance_resources = [
+    "policy_assignment",
+    "policy_definition",
+    "policy_exemption",
+    "policy_initiative",
+  ]
+  identity_display_resources = [
+    "application_registration",
+    "service_principal",
+  ]
+
+  standard_tokens        = concat([var.org_code, local.abbreviation, var.workload, var.region_code, var.environment_code], local.suffix_tokens)
+  purpose_tokens         = concat([var.org_code, local.abbreviation, var.purpose, var.region_code, var.environment_code], local.suffix_tokens)
+  extended_tokens        = concat([var.org_code, local.abbreviation, var.workload, var.purpose, var.region_code, var.environment_code], local.suffix_tokens)
+  governance_tokens      = [var.org_code, local.abbreviation, var.workload, var.purpose]
+  identity_tokens        = concat([var.org_code, local.abbreviation, var.workload, var.purpose, var.environment_code], local.suffix_tokens)
+  storage_account_tokens = concat([var.org_code, local.abbreviation, var.purpose, var.region_code, var.environment_code], local.suffix_tokens)
 
   generated_name = (
     var.resource_type == "management_group" ? join("-", [var.org_code, var.workload]) :
-    var.resource_type == "resource_group" ? join("-", local.resource_group_tokens) :
-    contains(["container_registry", "storage_account"], var.resource_type) ? join("", local.standard_tokens) :
+    var.resource_type == "storage_account" ? join("", local.storage_account_tokens) :
+    var.resource_type == "container_registry" ? join("", local.standard_tokens) :
+    contains(local.governance_resources, var.resource_type) ? join("-", local.governance_tokens) :
+    contains(local.identity_display_resources, var.resource_type) ? join("-", local.identity_tokens) :
+    contains(local.extended_resources, var.resource_type) ? join("-", local.extended_tokens) :
+    contains(local.purpose_only_resources, var.resource_type) ? join("-", local.purpose_tokens) :
     join("-", local.standard_tokens)
   )
 
