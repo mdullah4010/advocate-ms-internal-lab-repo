@@ -148,8 +148,23 @@ variable "name" {
   default     = null
 
   validation {
-    condition     = can(regex("^[[:alnum:]][[:alnum:]_.-]{0,62}[[:alnum:]_]$", var.name))
-    error_message = "Virtual network name must contain 2 to 64 characters, use only alphanumeric characters, underscores, periods, or hyphens, start with an alphanumeric character, and end with an alphanumeric character or underscore."
+    condition     = try(length(var.name) >= 2 && length(var.name) <= 64, false)
+    error_message = "Virtual network name must contain between 2 and 64 characters."
+  }
+
+  validation {
+    condition     = can(regex("^[[:alnum:]_.-]+$", var.name))
+    error_message = "Virtual network name can contain only alphanumeric characters, underscores, periods, and hyphens."
+  }
+
+  validation {
+    condition     = can(regex("^[[:alnum:]]", var.name))
+    error_message = "Virtual network name must start with an alphanumeric character."
+  }
+
+  validation {
+    condition     = can(regex("[[:alnum:]_]$", var.name))
+    error_message = "Virtual network name must end with an alphanumeric character or underscore."
   }
 }
 
