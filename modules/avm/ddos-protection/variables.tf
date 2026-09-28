@@ -4,8 +4,8 @@ variable "name" {
   type        = string
 
   validation {
-    condition     = can(regex("^[[:alnum:]]([[:alnum:]_.-]{0,78}[[:alnum:]_])?$", var.name))
-    error_message = "DDoS protection plan name must contain 1 to 80 characters, use only alphanumeric characters, underscores, periods, or hyphens, start with an alphanumeric character, and end with an alphanumeric character or underscore. See https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules."
+    condition     = can(regex("^[[:alnum:]][[:alnum:]_.-]{0,62}[[:alnum:]_]$", var.name))
+    error_message = "DDoS protection plan name must contain 2 to 64 characters, use only alphanumeric characters, underscores, periods, or hyphens, start with an alphanumeric character, and end with an alphanumeric character or underscore. See https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules."
   }
 }
 variable "location" {
