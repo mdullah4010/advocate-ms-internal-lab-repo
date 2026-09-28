@@ -2,9 +2,10 @@
 variable "name" {
   description = "The name of the DDoS protection plan."
   type        = string
+
   validation {
-    condition     = can(regex("^[a-zA-Z0-9_().-]{1,89}[a-zA-Z0-9_()-]$", var.name))
-    error_message = "Resource group name must contain 1 to 90 valid characters and must not end with a period."
+    condition     = can(regex("^[[:alnum:]][[:alnum:]_.-]{0,62}[[:alnum:]_]$", var.name))
+    error_message = "DDoS protection plan name must contain 2 to 64 characters, use only alphanumeric characters, underscores, periods, or hyphens, start with an alphanumeric character, and end with an alphanumeric character or underscore. See https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules."
   }
 }
 variable "location" {

@@ -7,11 +7,21 @@ variable "location" {
 variable "name" {
   description = "Name of the private endpoint."
   type        = string
+
+  validation {
+    condition     = can(regex("^[[:alnum:]][[:alnum:]_.-]{0,62}[[:alnum:]_]$", var.name))
+    error_message = "Private endpoint name must contain 2 to 64 characters, use only alphanumeric characters, underscores, periods, or hyphens, start with an alphanumeric character, and end with an alphanumeric character or underscore. See https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules."
+  }
 }
 
 variable "network_interface_name" {
   description = "Custom name of the network interface attached to the private endpoint. Changing this value replaces the resource."
   type        = string
+
+  validation {
+    condition     = can(regex("^[[:alnum:]]([[:alnum:]_.-]{0,78}[[:alnum:]_])?$", var.network_interface_name))
+    error_message = "Network interface name must contain 1 to 80 characters, use only alphanumeric characters, underscores, periods, or hyphens, start with an alphanumeric character, and end with an alphanumeric character or underscore. See https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules."
+  }
 }
 
 variable "private_connection_resource_id" {

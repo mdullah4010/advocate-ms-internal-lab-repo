@@ -5,6 +5,11 @@ variable "location" {
 variable "name" {
   description = "The name of the private DNS resolver."
   type        = string
+
+  validation {
+    condition     = can(regex("^[[:alnum:]]([[:alnum:]_-]{0,78}[[:alnum:]])?$", var.name))
+    error_message = "Private DNS resolver name must contain 1 to 80 characters, use only alphanumeric characters, underscores, or hyphens, and start and end with an alphanumeric character. See https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules."
+  }
 }
 variable "resource_group_name" {
   description = "The name of the resource group where the private DNS resolver will be created."

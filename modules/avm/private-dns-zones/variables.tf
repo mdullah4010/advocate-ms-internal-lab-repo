@@ -1,6 +1,11 @@
 variable "domain_name" {
   description = "The domain name for the private DNS zones."
   type        = string
+
+  validation {
+    condition     = length(var.domain_name) <= 63 && can(regex("^[[:alnum:]_-]+(\\.[[:alnum:]_-]+){1,33}$", var.domain_name))
+    error_message = "Private DNS zone name must contain 1 to 63 characters and 2 to 34 dot-separated labels; each label can contain only alphanumeric characters, underscores, or hyphens. See https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules."
+  }
 }
 
 variable "parent_id" {

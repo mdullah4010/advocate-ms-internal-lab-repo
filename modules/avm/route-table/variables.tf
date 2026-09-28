@@ -11,6 +11,11 @@ variable "name" {
   type        = string
   description = "(Required) Specifies the name of the Route Table. Changing this forces a new resource to be created."
   nullable    = false
+
+  validation {
+    condition     = can(regex("^[[:alnum:]]([[:alnum:]_.-]{0,78}[[:alnum:]_])?$", var.name))
+    error_message = "Route table name must contain 1 to 80 characters, use only alphanumeric characters, underscores, periods, or hyphens, start with an alphanumeric character, and end with an alphanumeric character or underscore. See https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules."
+  }
 }
 
 variable "resource_group_name" {
