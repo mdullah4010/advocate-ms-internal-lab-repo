@@ -149,7 +149,7 @@ variable "name" {
 
   validation {
     condition     = can(regex("^[[:alnum:]][[:alnum:]_.-]{0,62}[[:alnum:]_]$", var.name))
-    error_message = "Virtual network name must contain 2 to 64 characters, use only alphanumeric characters, underscores, periods, or hyphens, start with an alphanumeric character, and end with an alphanumeric character or underscore."
+    error_message = "Virtual network name must contain 2 to 64 characters, use only alphanumeric characters, underscores, periods, or hyphens, start with an alphanumeric character, and end with an alphanumeric character or underscore. See https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules."
   }
 }
 
