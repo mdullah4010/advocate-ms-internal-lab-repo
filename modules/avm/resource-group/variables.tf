@@ -3,8 +3,8 @@ variable "name" {
   type        = string
 
   validation {
-    condition     = can(regex("^[a-zA-Z0-9_().-]{1,89}[a-zA-Z0-9_()-]$", var.name))
-    error_message = "Resource group name must contain 1 to 90 valid characters and must not end with a period."
+    condition     = can(regex("^[[:alnum:]_().-]{0,89}[[:alnum:]_()-]$", var.name))
+    error_message = "Resource group name must contain 1 to 90 characters, use only letters, numbers, underscores, hyphens, periods, or parentheses, and must not end with a period. See https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules."
   }
 }
 

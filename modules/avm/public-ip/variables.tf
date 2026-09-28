@@ -9,8 +9,8 @@ variable "name" {
   description = "Name of public IP address resource"
   nullable    = false
   validation {
-    condition     = can(regex("^[a-zA-Z0-9]([a-zA-Z0-9._-]{0,78}[a-zA-Z0-9_])?$", var.name))
-    error_message = "The name must be between 3 and 24 characters long and can only contain lowercase letters, numbers and dashes."
+    condition     = can(regex("^[[:alnum:]]([[:alnum:]_.-]{0,78}[[:alnum:]_])?$", var.name))
+    error_message = "Public IP address name must contain 1 to 80 characters, use only alphanumeric characters, underscores, periods, or hyphens, start with an alphanumeric character, and end with an alphanumeric character or underscore. See https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules."
   }
 }
 
