@@ -37,3 +37,15 @@ Special patterns:
 Private DNS zone names are not generated because the standard defines them as provider-controlled service exceptions.
 
 The module validates controlled environment and region values, approved resource abbreviations, token syntax, instance formatting, and final resource-specific length and character constraints. Uniqueness itself must be checked against the target Azure scope during planning or deployment.
+
+## Examples and tests
+
+The `tests` folder contains standalone module calls for a resource group, virtual network, subnet, public IP address, storage account, and management group. Preview all generated names without deploying Azure resources:
+
+```powershell
+Set-Location tests
+terraform init -backend=false
+terraform plan -var-file=test.auto.tfvars.example
+```
+
+Run the native assertion suite from this module's root with `terraform test`.

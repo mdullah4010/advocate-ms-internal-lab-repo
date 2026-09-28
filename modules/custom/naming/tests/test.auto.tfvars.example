@@ -1,0 +1,8 @@
+# Replace this placeholder with an approved organization code from the registry.
+org_code           = "org"
+organization_codes = ["org"]
+
+purpose_codes    = ["connect", "firewall", "tfstate"]
+region_code      = "eus2"
+environment_code = "azp"
+instance         = 1
