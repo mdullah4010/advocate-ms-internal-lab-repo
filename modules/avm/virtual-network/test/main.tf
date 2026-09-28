@@ -1,7 +1,7 @@
 locals {
   resource_group_name            = "rg-vnet-module-test-${var.test_run_id}"
   primary_virtual_network_name   = "vnet-primary-test-${var.test_run_id}"
-  secondary_virtual_network_name = "vnet-secondary-test-${var.test_run_id}"
+  secondary_virtual_network_name = "2vnet-secondary-test-${var.test_run_id}"
 
   primary_subnets = {
     gateway = {
