@@ -1,5 +1,11 @@
 ## Module development guidelines
 
+### Custom modules
+
+| Module | Description |
+| --- | --- |
+| [Naming](custom/naming/README.md) | Generates and validates deterministic Azure resource names from the Advocate Health naming standard. |
+
 Module development progress is tracked in the [Advocate Health Azure Landing Zones Module Tracker](https://microsoft.sharepoint.com/:x:/t/CT-51961/cQp8MYlee3N2QJV7M3X95d7xEgUCe4KCc-YgizjCUC6mKREzQg). Update the tracker when module development starts, its status changes, or work is completed.
 
 ### Module selection
