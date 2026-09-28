@@ -146,6 +146,11 @@ variable "name" {
   description = "Name of the Azure virtual network."
   type        = string
   default     = null
+
+  validation {
+    condition     = can(regex("^[[:alnum:]][[:alnum:]_.-]{0,62}[[:alnum:]_]$", var.name))
+    error_message = "Virtual network name must contain 2 to 64 characters, use only alphanumeric characters, underscores, periods, or hyphens, start with an alphanumeric character, and end with an alphanumeric character or underscore."
+  }
 }
 
 variable "peerings" {
