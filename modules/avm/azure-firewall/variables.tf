@@ -20,6 +20,11 @@ variable "name" {
   description = "Name of the Firewall."
   type        = string
   nullable    = false
+
+  validation {
+    condition     = can(regex("^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$", var.name))
+    error_message = "The Azure Firewall name must be 1-80 characters long, start with a letter or number, and contain only letters, numbers, periods, underscores, or hyphens. See: https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules"
+  }
 }
 
 variable "resource_group_name" {
