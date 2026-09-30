@@ -1,20 +1,52 @@
-name: Terraform Validate
+name: Terraform Validation
 
 on:
-  # pull_request:
-  #   branches: [main]
-  #   paths:
-  #     - "envs/**"
-  #     - "modules/**"
-  #     - ".github/workflows/terraform-*.yml"
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    branches:
+      - main
+    paths:
+      - "envs/**"
+      - "modules/**"
+      - "Platform/**"
+      - ".github/workflows/terraform-validate.yml"
   workflow_dispatch:
+
+# Cancel an in-progress run when a newer commit is pushed to the same PR.
+concurrency:
+  group: terraform-validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
+env:
+  TERRAFORM_VERSION: "1.9.8"
+
 jobs:
-  validate:
+  format:
+    name: Check Terraform formatting
     runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Check formatting
+        run: terraform fmt -check -recursive -diff
+
+  validate:
+    name: Validate ${{ matrix.stack }}
+    runs-on: ubuntu-latest
+
     strategy:
       fail-fast: false
       matrix:
@@ -29,19 +61,27 @@ jobs:
         working-directory: envs/prod/${{ matrix.stack }}
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.9.8"
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
 
-      - name: Format check
-        run: terraform fmt -check -recursive "${{ github.workspace }}/envs/prod" "${{ github.workspace }}/modules"
-
-      - name: Initialize without backend
+      - name: Initialize Terraform without backend
         run: terraform init -backend=false -input=false
 
-      - name: Validate
+      - name: Validate Terraform
         run: terraform validate -no-color
+
+      - name: Write validation summary
+        if: ${{ always() }}
+        run: |
+          {
+            echo "## Terraform validation - ${{ matrix.stack }}"
+            echo
+            echo "- Stack: envs/prod/${{ matrix.stack }}"
+            echo "- Result: ${{ job.status }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+        
