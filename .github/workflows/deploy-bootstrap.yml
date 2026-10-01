@@ -1,0 +1,116 @@
+name: Deploy Terraform Bootstrap
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - bootstrap/**
+      - .github/workflows/deploy-bootstrap.yml
+  workflow_dispatch:
+    inputs:
+      location:
+        description: Azure region name, such as eastus or eastus2
+        required: false
+        default: eastus2
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: terraform-bootstrap
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy bootstrap resource group
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+        working-directory: bootstrap
+    env:
+      ARM_USE_OIDC: "true"
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TF_IN_AUTOMATION: "true"
+      # Automatic (push) runs have no inputs, so they use eastus2.
+      TF_VAR_location: ${{ inputs.location || 'eastus2' }}
+      TF_VAR_resource_group_name: rg-advocate-internal-bootstrap-${{ inputs.location || 'eastus2' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.4"
+
+      - name: Log in to Azure with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Check formatting
+        run: terraform fmt -check -recursive
+
+      - name: Initialize Terraform
+        run: |
+          mkdir -p logs
+          terraform init -input=false -no-color 2>&1 | tee logs/init.log
+
+      - name: Validate Terraform
+        run: terraform validate -no-color 2>&1 | tee logs/validate.log
+
+      # State is local and starts empty each run, so adopt the resource group if a previous run created it.
+      - name: Import existing resource group
+        run: |
+          if [[ "$(az group exists --name "$TF_VAR_resource_group_name")" == "true" ]]; then
+            terraform import -input=false -no-color azurerm_resource_group.bootstrap \
+              "/subscriptions/$ARM_SUBSCRIPTION_ID/resourceGroups/$TF_VAR_resource_group_name" 2>&1 | tee logs/import.log
+          else
+            echo "Resource group $TF_VAR_resource_group_name does not exist; Terraform will create it." | tee logs/import.log
+          fi
+
+      - name: Create Terraform plan
+        run: |
+          terraform plan -input=false -no-color -out=tfplan 2>&1 | tee logs/plan.log
+          terraform show -no-color tfplan > logs/plan.txt
+
+      - name: Apply Terraform plan
+        run: terraform apply -input=false -auto-approve -no-color tfplan 2>&1 | tee logs/apply.log
+
+      - name: Verify resource group
+        run: |
+          az group show \
+            --name "$(terraform output -raw resource_group_name)" \
+            --query "{name:name,location:location,provisioningState:properties.provisioningState}" \
+            --output table | tee logs/verification.log
+
+      - name: Publish deployment summary
+        if: ${{ success() }}
+        run: |
+          {
+            echo "## Terraform bootstrap deployment"
+            echo
+            echo "- Resource group: \`$(terraform output -raw resource_group_name)\`"
+            echo "- Location: \`$(terraform output -raw resource_group_location)\`"
+            echo "- Terraform state: local to this workflow run"
+            echo "- Execution logs: retained as the \`terraform-bootstrap-logs-${{ github.run_id }}-${{ github.run_attempt }}\` artifact"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Retain Terraform execution logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-bootstrap-logs-${{ github.run_id }}-${{ github.run_attempt }}
+          path: bootstrap/logs/
+          if-no-files-found: warn
+          retention-days: 30
