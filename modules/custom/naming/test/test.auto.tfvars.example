@@ -1,8 +1,6 @@
-# Approved organization code and controlled registry.
-org_code           = "se"
-organization_codes = ["se"]
+# Approved organization code.
+org_code = "se"
 
-purpose_codes    = ["connect", "firewall", "tfstate"]
 region_code      = "eus2"
 environment_code = "prd"
 instance         = 1

@@ -48,22 +48,12 @@ variable "resource_type" {
 }
 
 variable "org_code" {
-  description = "Approved lowercase organization code from the controlled organization registry."
+  description = "Approved lowercase organization code."
   type        = string
 
   validation {
-    condition     = can(regex("^[a-z0-9]+$", var.org_code)) && contains(var.organization_codes, var.org_code)
-    error_message = "org_code must contain only lowercase letters and numbers and must exist in organization_codes."
-  }
-}
-
-variable "organization_codes" {
-  description = "Controlled registry of approved lowercase organization codes."
-  type        = set(string)
-
-  validation {
-    condition     = length(var.organization_codes) > 0 && alltrue([for code in var.organization_codes : can(regex("^[a-z0-9]+$", code))])
-    error_message = "organization_codes must contain at least one code, and every code must use only lowercase letters and numbers."
+    condition     = can(regex("^[a-z0-9]+$", var.org_code))
+    error_message = "org_code must contain only lowercase letters and numbers."
   }
 }
 
@@ -115,8 +105,8 @@ variable "purpose" {
   default     = null
 
   validation {
-    condition     = var.purpose == null ? true : can(regex("^[a-z0-9]+$", var.purpose)) && contains(var.purpose_codes, var.purpose)
-    error_message = "purpose must be null or contain only lowercase letters and numbers and exist in purpose_codes."
+    condition     = var.purpose == null ? true : can(regex("^[a-z0-9]+$", var.purpose))
+    error_message = "purpose must be null or contain only lowercase letters and numbers."
   }
 
   validation {
@@ -124,17 +114,6 @@ variable "purpose" {
       (var.workload == null) != (var.purpose == null)
     )
     error_message = "Set exactly one of workload or purpose for Azure resources; management groups use workload only."
-  }
-}
-
-variable "purpose_codes" {
-  description = "Controlled registry of approved lowercase purpose, target, category, control, and scope codes."
-  type        = set(string)
-  default     = []
-
-  validation {
-    condition     = alltrue([for code in var.purpose_codes : can(regex("^[a-z0-9]+$", code))])
-    error_message = "Every purpose_codes entry must use only lowercase letters and numbers."
   }
 }
 

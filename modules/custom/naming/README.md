@@ -10,7 +10,6 @@ module "virtual_network_name" {
 
   resource_type      = "virtual_network"
   org_code           = "contoso"
-  organization_codes = ["contoso"]
   workload           = "connect"
   workload_codes     = ["connect", "platform"]
   region_code        = "eus2"
