@@ -1,17 +1,7 @@
 variable "org_code" {
   description = "Approved organization code used by the example module calls."
   type        = string
-}
-
-variable "organization_codes" {
-  description = "Controlled organization-code registry containing org_code."
-  type        = set(string)
-}
-
-variable "purpose_codes" {
-  description = "Controlled purpose-code registry used by the examples."
-  type        = set(string)
-  default     = ["connect", "firewall", "tfstate"]
+  default     = "se"
 }
 
 variable "region_code" {
@@ -23,7 +13,7 @@ variable "region_code" {
 variable "environment_code" {
   description = "Approved Advocate Health cloud and environment code."
   type        = string
-  default     = "azp"
+  default     = "prd"
 }
 
 variable "instance" {
