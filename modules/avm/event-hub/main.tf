@@ -1,0 +1,31 @@
+module "this" {
+  source  = "Azure/avm-res-eventhub-namespace/azurerm"
+  version = "0.1.1"
+
+  auto_inflate_enabled                    = var.auto_inflate_enabled
+  capacity                                = var.capacity
+  customer_managed_key                    = var.customer_managed_key
+  dedicated_cluster_id                    = var.dedicated_cluster_id
+  diagnostic_settings                     = var.diagnostic_settings
+  enable_telemetry                        = var.enable_telemetry
+  event_hubs                              = var.event_hubs
+  existing_parent_resource                = var.existing_parent_resource
+  ignore_body_changes                     = var.ignore_body_changes
+  local_authentication_enabled            = var.local_authentication_enabled
+  location                                = var.location
+  lock                                    = var.lock
+  managed_identities                      = var.managed_identities
+  maximum_throughput_units                = var.maximum_throughput_units
+  name                                    = var.name
+  network_rulesets                        = var.network_rulesets
+  private_endpoints                       = var.private_endpoints
+  private_endpoints_manage_dns_zone_group = var.private_endpoints_manage_dns_zone_group
+  public_network_access_enabled           = var.public_network_access_enabled
+  resource_group_name                     = var.resource_group_name
+  resource_types                          = var.resource_types
+  retry                                   = var.retry
+  role_assignments                        = var.role_assignments
+  sku                                     = var.sku
+  tags                                    = var.tags
+  timeouts                                = var.timeouts
+}
