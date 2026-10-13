@@ -77,3 +77,9 @@ Guidelines:
 - When using the approval-gated workflow `terraform-module-test-with-destroy-approval`, review the deployed resources promptly and approve the destroy job when inspection is complete. Resources remain deployed, may incur Azure charges, and are not cleaned up until approval is granted.
 - Review the workflow summary and confirm that cleanup succeeded and the remote state contains no managed resources.
 - If a workflow is cancelled, rejected, or fails before cleanup completes, treat the resources as still deployed. Investigate the workflow and remote state, then complete cleanup before starting another test for that module.
+
+### AVM module catalog
+
+| Module | Upstream source | Pinned version |
+| --- | --- | --- |
+| `avm/log-analytics-workspace` | [Azure/avm-res-operationalinsights-workspace](https://registry.terraform.io/modules/Azure/avm-res-operationalinsights-workspace/azurerm) | `0.5.1` |
