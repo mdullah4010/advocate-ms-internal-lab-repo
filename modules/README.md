@@ -83,3 +83,4 @@ Guidelines:
 | Module | Upstream source | Pinned version |
 | --- | --- | --- |
 | `avm/log-analytics-workspace` | [Azure/avm-res-operationalinsights-workspace](https://registry.terraform.io/modules/Azure/avm-res-operationalinsights-workspace/azurerm) | `0.5.1` |
+| `avm/azure-key-vault` | [Azure/avm-res-keyvault-vault](https://registry.terraform.io/modules/Azure/avm-res-keyvault-vault/azurerm) | `0.12.0` |

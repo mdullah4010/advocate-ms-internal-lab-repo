@@ -1,6 +1,7 @@
 # Terraform
 **/.terraform/
 **/.terraform.lock.hcl
+!modules/avm/azure-key-vault/test/.terraform.lock.hcl
 *.tfstate
 *.tfstate.*
 *.tfplan
