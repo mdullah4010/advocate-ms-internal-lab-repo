@@ -1,9 +1,8 @@
 locals {
-  inbound_subnet_name       = "snet-dnsr-inbound-${var.test_run_id}"
-  outbound_subnet_name      = "snet-dnsr-outbound-${var.test_run_id}"
-  private_dns_resolver_name = "dnspr-module-test-${var.test_run_id}"
-  resource_group_name       = "rg-dnsr-module-test-${var.test_run_id}"
-  virtual_network_name      = "vnet-dnsr-test-${var.test_run_id}"
+  inbound_subnet_name  = "snet-dnsr-inbound-${var.test_run_id}"
+  outbound_subnet_name = "snet-dnsr-outbound-${var.test_run_id}"
+  resource_group_name  = "rg-dnsr-module-test-${var.test_run_id}"
+  virtual_network_name = "vnet-dnsr-test-${var.test_run_id}"
 
   # Private DNS Resolver requires dedicated subnets delegated to the service.
   resolver_delegation = [{
@@ -72,34 +71,22 @@ module "private_dns_resolver" {
 
   depends_on = [time_sleep.resolver_teardown]
 
-  name                        = local.private_dns_resolver_name
-  location                    = module.resource_group.location
-  resource_group_name         = module.resource_group.name
-  virtual_network_resource_id = module.virtual_network.id
-  enable_telemetry            = false
+  location                    = var.location
+  name                        = var.name
+  resource_group_name         = coalesce(var.resource_group_name, module.resource_group.name)
+  virtual_network_resource_id = coalesce(var.virtual_network_resource_id, module.virtual_network.id)
+  enable_telemetry            = var.enable_telemetry
   inbound_endpoints = {
-    inbound = {
-      name        = "in-${local.private_dns_resolver_name}"
+    for key, endpoint in var.inbound_endpoints : key => merge(endpoint, {
       subnet_name = local.inbound_subnet_name
-    }
+    })
   }
+  lock = var.lock
   outbound_endpoints = {
-    outbound = {
-      name        = "out-${local.private_dns_resolver_name}"
+    for key, endpoint in var.outbound_endpoints : key => merge(endpoint, {
       subnet_name = local.outbound_subnet_name
-      forwarding_ruleset = {
-        default = {
-          name = "dnsfrs-${var.test_run_id}"
-          rules = {
-            forwarded = {
-              name                     = "rule-forwarded"
-              domain_name              = var.forwarding_rule_domain_name
-              destination_ip_addresses = var.forwarding_rule_destination_ip_addresses
-            }
-          }
-        }
-      }
-    }
+    })
   }
-  tags = var.tags
+  role_assignments = var.role_assignments
+  tags             = var.tags
 }

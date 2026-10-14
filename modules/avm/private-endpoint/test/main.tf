@@ -1,5 +1,4 @@
 locals {
-  private_endpoint_name        = "pe-storage-test-${var.test_run_id}"
   private_dns_zone_name        = "privatelink.blob.core.windows.net"
   resource_group_name          = "rg-pe-module-test-${var.test_run_id}"
   storage_account_name         = substr("stpe${substr(replace(var.subscription_id, "-", ""), 0, 6)}${replace(lower(var.test_run_id), "-", "")}", 0, 24)
@@ -65,14 +64,20 @@ resource "azurerm_private_dns_zone_virtual_network_link" "blob" {
 module "private_endpoint" {
   source = "./.."
 
-  name                           = local.private_endpoint_name
-  network_interface_name         = "nic-${local.private_endpoint_name}"
-  location                       = module.resource_group.location
-  resource_group_name            = module.resource_group.name
-  subnet_resource_id             = module.virtual_network.subnets["private_endpoint"].resource_id
-  private_connection_resource_id = azurerm_storage_account.test.id
-  subresource_names              = ["blob"]
-  private_dns_zone_group_name    = "default"
-  private_dns_zone_resource_ids  = [azurerm_private_dns_zone.blob.id]
-  tags                           = var.tags
+  location                                   = var.location
+  name                                       = var.name
+  network_interface_name                     = var.network_interface_name
+  private_connection_resource_id             = coalesce(var.private_connection_resource_id, azurerm_storage_account.test.id)
+  resource_group_name                        = coalesce(var.resource_group_name, module.resource_group.name)
+  subnet_resource_id                         = coalesce(var.subnet_resource_id, module.virtual_network.subnets["private_endpoint"].resource_id)
+  application_security_group_association_ids = var.application_security_group_association_ids
+  enable_telemetry                           = var.enable_telemetry
+  ip_configurations                          = var.ip_configurations
+  lock                                       = var.lock
+  private_dns_zone_group_name                = var.private_dns_zone_group_name
+  private_dns_zone_resource_ids              = coalesce(var.private_dns_zone_resource_ids, [azurerm_private_dns_zone.blob.id])
+  private_service_connection_name            = var.private_service_connection_name
+  role_assignments                           = var.role_assignments
+  subresource_names                          = var.subresource_names
+  tags                                       = var.tags
 }

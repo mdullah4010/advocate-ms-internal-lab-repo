@@ -1,3 +1,10 @@
+locals {
+  module_version = "avm-network-security-group-v1.0.0"
+  tags = merge(var.tags, {
+    module_version = local.module_version
+  })
+}
+
 module "this" {
   source  = "Azure/avm-res-network-networksecuritygroup/azurerm"
   version = "0.5.1"
@@ -11,6 +18,6 @@ module "this" {
   lock                = var.lock
   role_assignments    = var.role_assignments
   security_rules      = var.security_rules
-  tags                = var.tags
+  tags                = local.tags
   timeouts            = var.timeouts
 }

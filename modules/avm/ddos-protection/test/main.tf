@@ -14,8 +14,11 @@ module "resource_group" {
 module "ddos_protection" {
   source = "./.."
 
-  name                = local.ddos_protection_plan_name
+  name                = coalesce(var.name, local.ddos_protection_plan_name)
   location            = module.resource_group.location
-  resource_group_name = module.resource_group.name
+  resource_group_name = coalesce(var.resource_group_name, module.resource_group.name)
+  enable_telemetry    = var.enable_telemetry
+  lock                = var.lock
+  role_assignments    = var.role_assignments
   tags                = var.tags
 }

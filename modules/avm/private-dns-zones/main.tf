@@ -1,3 +1,10 @@
+locals {
+  module_version = "avm-private-dns-zones-v1.0.0"
+  tags = merge(var.tags, {
+    module_version = local.module_version
+  })
+}
+
 module "this" {
   source  = "Azure/avm-res-network-privatednszone/azurerm"
   version = "0.5.0"
@@ -17,7 +24,7 @@ module "this" {
   role_assignments                     = var.role_assignments
   soa_record                           = var.soa_record
   srv_records                          = var.srv_records
-  tags                                 = var.tags
+  tags                                 = local.tags
   timeouts                             = var.timeouts
   txt_records                          = var.txt_records
   virtual_network_links                = var.virtual_network_links

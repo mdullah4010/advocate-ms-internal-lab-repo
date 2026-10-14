@@ -1,3 +1,10 @@
+locals {
+  module_version = "avm-public-ip-v1.0.0"
+  tags = merge(var.tags, {
+    module_version = local.module_version
+  })
+}
+
 module "this" {
   source  = "Azure/avm-res-network-publicipaddress/azurerm"
   version = "0.2.1"
@@ -20,7 +27,7 @@ module "this" {
   role_assignments        = var.role_assignments
   sku                     = var.sku
   sku_tier                = var.sku_tier
-  tags                    = var.tags
+  tags                    = local.tags
   zones                   = var.zones
   resource_group_name     = var.resource_group_name
 }

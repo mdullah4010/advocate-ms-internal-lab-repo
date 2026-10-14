@@ -1,8 +1,6 @@
 locals {
-  private_dns_zone_name     = "privatelink.blob.core.windows.net"
-  resource_group_name       = "rg-private-dns-test-${var.test_run_id}"
-  virtual_network_link_name = "link-private-dns-test-${var.test_run_id}"
-  virtual_network_name      = "vnet-private-dns-test-${var.test_run_id}"
+  resource_group_name  = "rg-private-dns-test-${var.test_run_id}"
+  virtual_network_name = "vnet-private-dns-test-${var.test_run_id}"
 }
 
 module "resource_group" {
@@ -26,25 +24,26 @@ module "virtual_network" {
 module "private_dns_zone" {
   source = "./.."
 
-  domain_name      = local.private_dns_zone_name
-  parent_id        = module.resource_group.id
-  enable_telemetry = false
-  a_records = {
-    test = {
-      name         = "test"
-      ttl          = 300
-      ip_addresses = [cidrhost(var.address_space[0], 4)]
-    }
-  }
+  domain_name                          = var.domain_name
+  parent_id                            = coalesce(var.parent_id, module.resource_group.id)
+  a_records                            = var.a_records
+  aaaa_records                         = var.aaaa_records
+  cname_records                        = var.cname_records
+  enable_telemetry                     = var.enable_telemetry
+  lock                                 = var.lock
+  mx_records                           = var.mx_records
+  ptr_records                          = var.ptr_records
+  retry                                = var.retry
+  role_assignment_name_use_random_uuid = var.role_assignment_name_use_random_uuid
+  role_assignments                     = var.role_assignments
+  soa_record                           = var.soa_record
+  srv_records                          = var.srv_records
+  tags                                 = var.tags
+  timeouts                             = var.timeouts
+  txt_records                          = var.txt_records
   virtual_network_links = {
-    test = {
-      name                                   = local.virtual_network_link_name
-      virtual_network_id                     = module.virtual_network.id
-      registration_enabled                   = false
-      private_dns_zone_supports_private_link = true
-      resolution_policy                      = var.virtual_network_link_resolution_policy
-      tags                                   = var.tags
-    }
+    for key, link in var.virtual_network_links : key => merge(link, {
+      virtual_network_id = coalesce(link.virtual_network_id, link.vnetid, module.virtual_network.id)
+    })
   }
-  tags = var.tags
 }
