@@ -1,26 +1,6 @@
 locals {
   resource_group_name            = "rg-vnet-module-test-${var.test_run_id}"
-  primary_virtual_network_name   = "vnet-primary-test-${var.test_run_id}"
   secondary_virtual_network_name = "vnet-secondary-test-${var.test_run_id}"
-
-  primary_subnets = {
-    gateway = {
-      name             = "GatewaySubnet"
-      address_prefixes = [cidrsubnet(var.address_space[0], 8, 0)]
-    }
-    firewall = {
-      name             = "AzureFirewallSubnet"
-      address_prefixes = [cidrsubnet(var.address_space[0], 8, 1)]
-    }
-    bastion = {
-      name             = "AzureBastionSubnet"
-      address_prefixes = [cidrsubnet(var.address_space[0], 8, 2)]
-    }
-    test = {
-      name             = "snet-test-${var.test_run_id}"
-      address_prefixes = [cidrsubnet(var.address_space[0], 8, 3)]
-    }
-  }
 
   secondary_subnets = {
     test = {
@@ -45,35 +25,38 @@ module "secondary_virtual_network" {
   location      = module.resource_group.location
   parent_id     = module.resource_group.id
   address_space = var.peer_address_space
-  dns_servers = length(var.dns_servers) > 0 ? {
-    dns_servers = var.dns_servers
-  } : null
-  subnets = local.secondary_subnets
-  tags    = var.tags
+  dns_servers   = var.dns_servers
+  subnets       = local.secondary_subnets
+  tags          = var.tags
 }
 
 module "virtual_network" {
   source = "./.."
 
-  name          = local.primary_virtual_network_name
-  location      = module.resource_group.location
-  parent_id     = module.resource_group.id
-  address_space = var.address_space
-  dns_servers = length(var.dns_servers) > 0 ? {
-    dns_servers = var.dns_servers
-  } : null
+  location                = var.location
+  parent_id               = coalesce(var.parent_id, module.resource_group.id)
+  address_space           = var.address_space
+  bgp_community           = var.bgp_community
+  ddos_protection_plan    = var.ddos_protection_plan
+  diagnostic_settings     = var.diagnostic_settings
+  dns_servers             = var.dns_servers
+  enable_telemetry        = var.enable_telemetry
+  enable_vm_protection    = var.enable_vm_protection
+  encryption              = var.encryption
+  extended_location       = var.extended_location
+  flow_timeout_in_minutes = var.flow_timeout_in_minutes
+  ignore_body_changes     = var.ignore_body_changes
+  ipam_pools              = var.ipam_pools
+  lock                    = var.lock
+  name                    = var.name
   peerings = {
-    secondary = {
-      name                                 = "peer-primary-to-secondary-${var.test_run_id}"
-      remote_virtual_network_resource_id   = module.secondary_virtual_network.resource_id
-      allow_forwarded_traffic              = true
-      allow_virtual_network_access         = true
-      create_reverse_peering               = true
-      reverse_name                         = "peer-secondary-to-primary-${var.test_run_id}"
-      reverse_allow_forwarded_traffic      = true
-      reverse_allow_virtual_network_access = true
-    }
+    for key, peering in var.peerings : key => merge(peering, {
+      remote_virtual_network_resource_id = coalesce(peering.remote_virtual_network_resource_id, module.secondary_virtual_network.resource_id)
+    })
   }
-  subnets = local.primary_subnets
-  tags    = var.tags
+  retry            = var.retry
+  role_assignments = var.role_assignments
+  subnets          = var.subnets
+  tags             = var.tags
+  timeouts         = var.timeouts
 }

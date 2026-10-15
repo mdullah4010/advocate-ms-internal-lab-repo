@@ -18,6 +18,12 @@ variable "subscription_id" {
   }
 }
 
+variable "name" {
+  description = "Optional resource group name override; when null, the fixture-generated name is used."
+  type        = string
+  default     = null
+}
+
 variable "location" {
   description = "Azure region for the test resource group."
   type        = string
@@ -42,4 +48,62 @@ variable "tags" {
     managedBy   = "terraform"
     purpose     = "resource-group-module-test"
   }
+}
+
+variable "enable_telemetry" {
+  description = "Controls whether telemetry is enabled for the resource group module."
+  type        = bool
+  default     = false
+}
+
+variable "lock" {
+  description = "Resource lock configuration for the resource group."
+  type = object({
+    kind = string
+    name = optional(string, null)
+  })
+  default = null
+}
+
+variable "managed_by" {
+  description = "Resource ID of the resource or application managing the resource group."
+  type        = string
+  default     = null
+}
+
+variable "retry" {
+  description = "Retry configuration for resource group operations."
+  type = object({
+    error_message_regex  = optional(list(string), ["409 Conflict"])
+    interval_seconds     = optional(number, null)
+    max_interval_seconds = optional(number, null)
+  })
+  default = {}
+}
+
+variable "role_assignments" {
+  description = "Role assignments to create on the resource group."
+  type = map(object({
+    name                                   = optional(string, null)
+    role_definition_id_or_name             = string
+    principal_id                           = string
+    description                            = optional(string, null)
+    skip_service_principal_aad_check       = optional(bool, false)
+    condition                              = optional(string, null)
+    condition_version                      = optional(string, null)
+    delegated_managed_identity_resource_id = optional(string, null)
+    principal_type                         = optional(string, null)
+  }))
+  default = {}
+}
+
+variable "timeouts" {
+  description = "Timeouts for resource group operations."
+  type = object({
+    create = optional(string, null)
+    delete = optional(string, null)
+    read   = optional(string, null)
+    update = optional(string, null)
+  })
+  default = {}
 }

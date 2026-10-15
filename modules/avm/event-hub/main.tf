@@ -1,3 +1,10 @@
+locals {
+  module_version = "avm-event-hub-v1.0.0"
+  tags = merge(var.tags, {
+    module_version = local.module_version
+  })
+}
+
 module "this" {
   source  = "Azure/avm-res-eventhub-namespace/azurerm"
   version = "0.1.1"
@@ -26,6 +33,6 @@ module "this" {
   retry                                   = var.retry
   role_assignments                        = var.role_assignments
   sku                                     = var.sku
-  tags                                    = var.tags
+  tags                                    = local.tags
   timeouts                                = var.timeouts
 }

@@ -1,3 +1,10 @@
+locals {
+  module_version = "avm-private-dns-resolver-v1.0.0"
+  tags = merge(var.tags, {
+    module_version = local.module_version
+  })
+}
+
 module "this" {
   source  = "Azure/avm-res-network-dnsresolver/azurerm"
   version = "0.8.0"
@@ -12,5 +19,5 @@ module "this" {
   outbound_endpoints = var.outbound_endpoints
   lock               = var.lock
   role_assignments   = var.role_assignments
-  tags               = var.tags
+  tags               = local.tags
 }

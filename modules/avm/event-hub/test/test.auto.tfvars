@@ -1,0 +1,31 @@
+location            = "westus3"
+name                = null
+resource_group_name = null
+
+customer_managed_key                    = null
+diagnostic_settings                     = {}
+enable_telemetry                        = false
+existing_parent_resource                = null
+ignore_body_changes                     = {}
+lock                                    = null
+managed_identities                      = {}
+private_endpoints                       = {}
+private_endpoints_manage_dns_zone_group = false
+resource_types                          = {}
+retry                                   = null
+role_assignments                        = {}
+tags = {
+  environment = "test"
+  managedBy   = "terraform"
+  purpose     = "event-hub-module-test"
+}
+timeouts                      = null
+auto_inflate_enabled          = false
+capacity                      = 1
+dedicated_cluster_id          = null
+local_authentication_enabled  = false
+maximum_throughput_units      = null
+network_rulesets              = null
+public_network_access_enabled = true
+sku                           = "Basic"
+event_hubs                    = {}

@@ -18,10 +18,22 @@ variable "subscription_id" {
   }
 }
 
+variable "name" {
+  description = "Optional DDoS protection plan name override; when null, the fixture-generated name is used."
+  type        = string
+  default     = null
+}
+
 variable "location" {
   description = "Azure region for the test resources."
   type        = string
   default     = "westus3"
+}
+
+variable "resource_group_name" {
+  description = "Optional resource group name override; when null, the fixture resource group is used."
+  type        = string
+  default     = null
 }
 
 variable "test_run_id" {
@@ -42,4 +54,34 @@ variable "tags" {
     managedBy   = "terraform"
     purpose     = "ddos-protection-module-test"
   }
+}
+
+variable "enable_telemetry" {
+  description = "Controls whether telemetry is enabled for the DDoS protection plan module."
+  type        = bool
+  default     = false
+}
+
+variable "lock" {
+  description = "Resource lock configuration for the DDoS protection plan."
+  type = object({
+    kind = string
+    name = optional(string, null)
+  })
+  default = null
+}
+
+variable "role_assignments" {
+  description = "Role assignments to create on the DDoS protection plan."
+  type = map(object({
+    role_definition_id_or_name             = string
+    principal_id                           = string
+    description                            = optional(string, null)
+    skip_service_principal_aad_check       = optional(bool, false)
+    condition                              = optional(string, null)
+    condition_version                      = optional(string, null)
+    delegated_managed_identity_resource_id = optional(string, null)
+    principal_type                         = optional(string, null)
+  }))
+  default = {}
 }

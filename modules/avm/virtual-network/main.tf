@@ -1,3 +1,10 @@
+locals {
+  module_version = "avm-virtual-network-v1.0.0"
+  tags = merge(var.tags, {
+    module_version = local.module_version
+  })
+}
+
 module "this" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "0.22.2"
@@ -22,6 +29,6 @@ module "this" {
   retry                   = var.retry
   role_assignments        = var.role_assignments
   subnets                 = var.subnets
-  tags                    = var.tags
+  tags                    = local.tags
   timeouts                = var.timeouts
 }

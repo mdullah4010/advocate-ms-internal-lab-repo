@@ -18,10 +18,22 @@ variable "subscription_id" {
   }
 }
 
+variable "name" {
+  description = "Optional network security group name override; when null, the fixture-generated name is used."
+  type        = string
+  default     = null
+}
+
 variable "location" {
   description = "Azure region for the test resources."
   type        = string
   default     = "westus3"
+}
+
+variable "resource_group_name" {
+  description = "Optional resource group name override; when null, the fixture resource group is used."
+  type        = string
+  default     = null
 }
 
 variable "test_run_id" {
@@ -32,6 +44,53 @@ variable "test_run_id" {
     condition     = can(regex("^[a-zA-Z0-9-]+$", var.test_run_id))
     error_message = "Test run ID may contain only letters, numbers, and hyphens."
   }
+}
+
+variable "diagnostic_settings" {
+  description = "Diagnostic settings to create for the network security group."
+  type = map(object({
+    name                                     = optional(string, null)
+    log_categories                           = optional(set(string), [])
+    log_groups                               = optional(set(string), ["allLogs"])
+    metric_categories                        = optional(set(string), ["AllMetrics"])
+    log_analytics_destination_type           = optional(string, "Dedicated")
+    workspace_resource_id                    = optional(string, null)
+    storage_account_resource_id              = optional(string, null)
+    event_hub_authorization_rule_resource_id = optional(string, null)
+    event_hub_name                           = optional(string, null)
+    marketplace_partner_resource_id          = optional(string, null)
+  }))
+  default = {}
+}
+
+variable "enable_telemetry" {
+  description = "Controls whether telemetry is enabled for the network security group module."
+  type        = bool
+  default     = false
+}
+
+variable "lock" {
+  description = "Resource lock configuration for the network security group."
+  type = object({
+    kind = string
+    name = optional(string, null)
+  })
+  default = null
+}
+
+variable "role_assignments" {
+  description = "Role assignments to create on the network security group."
+  type = map(object({
+    role_definition_id_or_name             = string
+    principal_id                           = string
+    description                            = optional(string, null)
+    skip_service_principal_aad_check       = optional(bool, false)
+    condition                              = optional(string, null)
+    condition_version                      = optional(string, null)
+    delegated_managed_identity_resource_id = optional(string, null)
+    principal_type                         = optional(string, null)
+  }))
+  default = {}
 }
 
 variable "security_rules" {
@@ -83,4 +142,15 @@ variable "tags" {
     managedBy   = "terraform"
     purpose     = "network-security-group-module-test"
   }
+}
+
+variable "timeouts" {
+  description = "Timeouts for network security group operations."
+  type = object({
+    create = optional(string)
+    delete = optional(string)
+    read   = optional(string)
+    update = optional(string)
+  })
+  default = null
 }

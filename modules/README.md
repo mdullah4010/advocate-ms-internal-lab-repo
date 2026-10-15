@@ -38,13 +38,14 @@ modules/
     ├── variables.tf
     ├── outputs.tf
     ├── versions.tf
-    └── test.auto.tfvars.example
+    └── test.auto.tfvars
 ```
 
 - `main.tf` defines the upstream AVM call or custom Azure resources.
 - `variables.tf` defines all required and optional module inputs.
 - `outputs.tf` exposes relevant resource identifiers and properties.
 - `test/` contains an independently deployable Terraform root used by the module test workflow.
+- `test/test.auto.tfvars` provides non-sensitive sample values for every module input. It must omit workflow-owned identity and unique run-ID values so CI can supply them through environment variables. When a module input shares a workflow variable name, use a nullable sample-facing alias and fall back to the workflow value in the module call.
 - Expose all required and optional inputs supported by the upstream AVM so consumers can configure the complete module capability while deployment requirements are still being defined. Preserve the upstream input types, defaults, validation behavior, and descriptions wherever possible.
 - Declare clear variable descriptions, types, defaults, and validation rules.
 - Pin module versions explicitly and use provider constraints compatible with the selected AVM version.

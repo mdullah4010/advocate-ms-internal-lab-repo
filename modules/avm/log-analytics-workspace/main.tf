@@ -1,3 +1,10 @@
+locals {
+  module_version = "avm-log-analytics-workspace-v1.0.0"
+  tags = merge(var.tags, {
+    module_version = local.module_version
+  })
+}
+
 module "this" {
   source  = "Azure/avm-res-operationalinsights-workspace/azurerm"
   version = "0.5.1"
@@ -32,5 +39,5 @@ module "this" {
   private_endpoints                                          = var.private_endpoints
   resource_group_name                                        = var.resource_group_name
   role_assignments                                           = var.role_assignments
-  tags                                                       = var.tags
+  tags                                                       = local.tags
 }

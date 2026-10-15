@@ -13,10 +13,22 @@ variable "test_run_id" {
   type        = string
 }
 
+variable "name" {
+  description = "Optional public IP name override; when null, the fixture-generated name is used."
+  type        = string
+  default     = null
+}
+
 variable "location" {
   type        = string
   description = "The Azure location where the resources will be deployed."
   nullable    = false
+}
+
+variable "resource_group_name" {
+  description = "Optional resource group name override; when null, the fixture resource group is used."
+  type        = string
+  default     = null
 }
 
 variable "allocation_method" {

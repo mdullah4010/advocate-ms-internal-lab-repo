@@ -1,3 +1,10 @@
+locals {
+  module_version = "avm-private-endpoint-v1.0.0"
+  tags = merge(var.tags, {
+    module_version = local.module_version
+  })
+}
+
 module "this" {
   source  = "Azure/avm-res-network-privateendpoint/azurerm"
   version = "0.2.0"
@@ -18,5 +25,5 @@ module "this" {
   private_service_connection_name            = var.private_service_connection_name
   role_assignments                           = var.role_assignments
   subresource_names                          = var.subresource_names
-  tags                                       = var.tags
+  tags                                       = local.tags
 }

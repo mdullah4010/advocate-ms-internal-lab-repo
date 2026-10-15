@@ -1,0 +1,36 @@
+location            = "westus3"
+name                = null
+resource_group_name = null
+
+customer_managed_key                                       = null
+diagnostic_settings                                        = {}
+enable_telemetry                                           = false
+lock                                                       = null
+log_analytics_workspace_allow_resource_only_permissions    = null
+log_analytics_workspace_cmk_for_query_forced               = null
+log_analytics_workspace_daily_quota_gb                     = null
+log_analytics_workspace_data_exports                       = {}
+log_analytics_workspace_dedicated_cluster_resource_id      = null
+log_analytics_workspace_identity                           = null
+log_analytics_workspace_internet_ingestion_enabled         = "false"
+log_analytics_workspace_internet_query_enabled             = "false"
+log_analytics_workspace_linked_storage_accounts            = {}
+log_analytics_workspace_local_authentication_enabled       = true
+log_analytics_workspace_reservation_capacity_in_gb_per_day = null
+log_analytics_workspace_retention_in_days                  = null
+log_analytics_workspace_sku                                = null
+log_analytics_workspace_tables                             = {}
+log_analytics_workspace_tables_update                      = {}
+log_analytics_workspace_timeouts                           = null
+monitor_private_link_scope                                 = {}
+monitor_private_link_scoped_resource                       = {}
+monitor_private_link_scoped_service_name                   = null
+network_security_perimeter_association                     = null
+private_endpoint_extensions                                = {}
+private_endpoints                                          = {}
+role_assignments                                           = {}
+tags = {
+  environment = "test"
+  managedBy   = "terraform"
+  purpose     = "log-analytics-workspace-module-test"
+}

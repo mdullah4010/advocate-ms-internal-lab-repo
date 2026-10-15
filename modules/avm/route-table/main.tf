@@ -1,3 +1,10 @@
+locals {
+  module_version = "avm-route-table-v1.0.0"
+  tags = merge(var.tags, {
+    module_version = local.module_version
+  })
+}
+
 module "this" {
   source  = "Azure/avm-res-network-routetable/azurerm"
   version = "0.5.0"
@@ -12,5 +19,5 @@ module "this" {
   routes                        = var.routes
   routes_legacy_mode            = var.routes_legacy_mode
   subnet_resource_ids           = var.subnet_resource_ids
-  tags                          = var.tags
+  tags                          = local.tags
 }
