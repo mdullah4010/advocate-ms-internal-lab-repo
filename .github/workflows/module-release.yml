@@ -1,0 +1,141 @@
+name: Create Module Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      module_category:
+        description: Module category
+        required: true
+        type: choice
+        options:
+          - avm
+          - custom
+      module_name:
+        description: Module folder name, such as log-analytics-workspace
+        required: true
+        type: string
+      version:
+        description: Semantic version without the v prefix, such as 1.0.0
+        required: true
+        type: string
+      create_github_release:
+        description: Create a GitHub Release with generated notes
+        required: true
+        default: true
+        type: boolean
+      confirmation:
+        description: Confirm creation of an immutable module release tag
+        required: true
+        type: choice
+        options:
+          - CREATE-RELEASE
+
+permissions:
+  contents: write
+
+concurrency:
+  group: module-release-${{ inputs.module_category }}-${{ inputs.module_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release ${{ inputs.module_category }}/${{ inputs.module_name }}
+    runs-on: ubuntu-latest
+    environment: module-release
+    timeout-minutes: 10
+
+    defaults:
+      run:
+        shell: bash
+
+    env:
+      MODULE_CATEGORY: ${{ inputs.module_category }}
+      MODULE_NAME: ${{ inputs.module_name }}
+      VERSION: ${{ inputs.version }}
+
+    steps:
+      - name: Require main branch
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "Module releases must be dispatched from main." >&2
+            exit 1
+          fi
+
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Validate release inputs
+        id: release
+        run: |
+          if [[ ! "$MODULE_NAME" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+            echo "Module name must use lowercase letters, numbers, and hyphens." >&2
+            exit 1
+          fi
+
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version must use semantic version format, such as 1.0.0." >&2
+            exit 1
+          fi
+
+          module_dir="modules/$MODULE_CATEGORY/$MODULE_NAME"
+          if [[ ! -d "$module_dir" ]]; then
+            echo "Module directory does not exist: $module_dir" >&2
+            exit 1
+          fi
+
+          if [[ ! -f "$module_dir/README.md" ]]; then
+            echo "Module README does not exist: $module_dir/README.md" >&2
+            exit 1
+          fi
+
+          if ! grep -Fqx "### v$VERSION" "$module_dir/README.md"; then
+            echo "The module README changelog does not contain ### v$VERSION." >&2
+            exit 1
+          fi
+
+          tag="$MODULE_CATEGORY-$MODULE_NAME-v$VERSION"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null 2>&1; then
+            echo "Tag already exists: $tag" >&2
+            exit 1
+          fi
+
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "module_dir=$module_dir" >> "$GITHUB_OUTPUT"
+
+      - name: Create and push annotated tag
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" "$GITHUB_SHA" -m "Release $MODULE_CATEGORY/$MODULE_NAME v$VERSION"
+          git push origin "refs/tags/$TAG"
+
+      - name: Create GitHub Release
+        if: ${{ inputs.create_github_release }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: >-
+          gh release create "$TAG"
+          --verify-tag
+          --title "$MODULE_CATEGORY/$MODULE_NAME v$VERSION"
+          --generate-notes
+
+      - name: Write job summary
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+          MODULE_DIR: ${{ steps.release.outputs.module_dir }}
+        run: |
+          {
+            echo "## Module release created"
+            echo
+            echo "- Module: $MODULE_CATEGORY/$MODULE_NAME"
+            echo "- Version: v$VERSION"
+            echo "- Tag: $TAG"
+            echo "- Directory: $MODULE_DIR"
+            echo "- GitHub Release: ${{ inputs.create_github_release }}"
+          } >> "$GITHUB_STEP_SUMMARY"

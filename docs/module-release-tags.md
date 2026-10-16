@@ -40,7 +40,20 @@ Before creating a tag:
 
 Do not tag a feature branch or an unreviewed local commit.
 
-## Create and publish a tag
+## Create a release with GitHub Actions
+
+The [Create Module Release](../.github/workflows/module-release.yml) workflow automates tag and GitHub Release creation:
+
+1. Open **Actions** and select **Create Module Release**.
+2. Select the `main` branch.
+3. Choose the module category, `avm` or `custom`.
+4. Enter the module folder name and semantic version without the `v` prefix.
+5. Choose whether to create a GitHub Release, select `CREATE-RELEASE`, and run the workflow.
+
+The workflow verifies the module directory, semantic version, matching README changelog entry, and tag availability before creating an annotated tag. Configure the `module-release` GitHub environment with required reviewers to add release approval. The workflow requires `contents: write`, which is declared in the workflow file.
+
+## Manual alternative
+### Create and Publish a tag manually
 
 Run the following commands from the repository root. Replace the module name and version as needed.
 
@@ -71,7 +84,7 @@ Publish the tag to GitHub:
 git push origin $tag
 ```
 
-## Create a GitHub Release
+### Create a GitHub Release manually
 
 A GitHub Release is optional, but recommended for recording release notes and making published versions easier to discover.
 
