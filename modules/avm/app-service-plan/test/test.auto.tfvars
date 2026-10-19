@@ -1,5 +1,5 @@
-location        = "westus3"
-test_run_id     = "local-001"
+location    = "westus3"
+test_run_id = "local-001"
 
 os_type               = "Linux"
 async_scaling_enabled = false
