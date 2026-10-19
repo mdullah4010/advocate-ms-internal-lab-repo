@@ -92,13 +92,14 @@ variable "managed_identities" {
 }
 
 variable "private_endpoints" {
-  type    = any
-  default = {}
+  description = "Additional private endpoints; the fixture always creates its own test private endpoint."
+  type        = any
+  default     = {}
 }
 
 variable "private_endpoints_manage_dns_zone_group" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "resource_types" {
@@ -123,12 +124,12 @@ variable "timeouts" {
 
 variable "auto_inflate_enabled" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "capacity" {
   type    = number
-  default = 1
+  default = 8
 }
 
 variable "dedicated_cluster_id" {
@@ -143,7 +144,7 @@ variable "local_authentication_enabled" {
 
 variable "maximum_throughput_units" {
   type    = number
-  default = null
+  default = 40
 }
 
 variable "network_rulesets" {
@@ -153,12 +154,12 @@ variable "network_rulesets" {
 
 variable "public_network_access_enabled" {
   type    = bool
-  default = true
+  default = false
 }
 
 variable "sku" {
   type    = string
-  default = "Basic"
+  default = "Standard"
 }
 
 variable "event_hubs" {
