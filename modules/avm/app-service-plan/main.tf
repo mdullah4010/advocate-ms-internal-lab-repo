@@ -1,0 +1,32 @@
+module "this" {
+  source  = "Azure/avm-res-web-serverfarm/azurerm"
+  version = "2.0.8"
+
+  location                        = var.location
+  name                            = var.name
+  os_type                         = var.os_type
+  parent_id                       = var.parent_id
+  app_service_environment_id      = var.app_service_environment_id
+  async_scaling_enabled           = var.async_scaling_enabled
+  diagnostic_settings             = var.diagnostic_settings
+  enable_telemetry                = var.enable_telemetry
+  install_scripts                 = var.install_scripts
+  lock                            = var.lock
+  managed_identities              = var.managed_identities
+  maximum_elastic_worker_count    = var.maximum_elastic_worker_count
+  per_site_scaling_enabled        = var.per_site_scaling_enabled
+  plan_default_identity           = var.plan_default_identity
+  premium_plan_auto_scale_enabled = var.premium_plan_auto_scale_enabled
+  rdp_enabled                     = var.rdp_enabled
+  registry_adapters               = var.registry_adapters
+  retry                           = var.retry
+  role_assignments                = var.role_assignments
+  server_farm_resource_type       = var.server_farm_resource_type
+  sku_name                        = var.sku_name
+  storage_mounts                  = var.storage_mounts
+  tags                            = var.tags
+  timeouts                        = var.timeouts
+  virtual_network_subnet_id       = var.virtual_network_subnet_id
+  worker_count                    = var.worker_count
+  zone_balancing_enabled          = var.zone_balancing_enabled
+}
