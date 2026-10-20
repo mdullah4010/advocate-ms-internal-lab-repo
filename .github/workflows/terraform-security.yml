@@ -47,11 +47,18 @@ jobs:
             exit 1
           fi
 
-      - name: Scan Terraform with Checkov
-        uses: bridgecrewio/checkov-action@v12
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          directory: modules/${{ inputs.module_name }}
-          framework: terraform
-          config_file: .checkov.yml
-          output_format: cli
-          soft_fail: false
+          python-version: "3.12"
+
+      - name: Install Checkov
+        run: python -m pip install --disable-pip-version-check "checkov==3.3.29"
+
+      - name: Scan Terraform with Checkov
+        run: >-
+          checkov
+          --directory "modules/$MODULE_NAME"
+          --framework terraform
+          --config-file .checkov.yml
+          --output cli
