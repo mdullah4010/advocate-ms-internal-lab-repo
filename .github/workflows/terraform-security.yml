@@ -60,5 +60,4 @@ jobs:
           checkov
           --directory "modules/$MODULE_NAME"
           --framework terraform
-          --config-file .checkov.yml
           --output cli
