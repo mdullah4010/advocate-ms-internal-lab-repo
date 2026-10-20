@@ -1,0 +1,57 @@
+name: Terraform Security Scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      module_name:
+        description: Module path under modules (for example, avm/virtual-network)
+        required: true
+        type: string
+
+concurrency:
+  group: terraform-security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checkov:
+    name: Scan ${{ inputs.module_name }} with Checkov
+    runs-on: self-hosted
+    timeout-minutes: 15
+
+    env:
+      MODULE_NAME: ${{ inputs.module_name }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate module path
+        shell: bash
+        run: |
+          if [[ ! "$MODULE_NAME" =~ ^([a-z0-9][a-z0-9-]*|(avm|custom)/[a-z0-9][a-z0-9-]*)$ ]]; then
+            echo "Module must be a lowercase module name or an avm/custom module path." >&2
+            exit 1
+          fi
+
+          module_dir="modules/$MODULE_NAME"
+          if [[ ! -d "$module_dir" ]]; then
+            echo "Module directory does not exist: $module_dir" >&2
+            exit 1
+          fi
+
+          if ! find "$module_dir" -type f \( -name '*.tf' -o -name '*.tf.json' \) -print -quit | grep -q .; then
+            echo "No Terraform configuration files were found in $module_dir." >&2
+            exit 1
+          fi
+
+      - name: Scan Terraform with Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: modules/${{ inputs.module_name }}
+          framework: terraform
+          config_file: .checkov.yml
+          output_format: cli
+          soft_fail: false
