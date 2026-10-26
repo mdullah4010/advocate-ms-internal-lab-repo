@@ -1,0 +1,301 @@
+name: Terraform Module Plan and Checkov Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      module_name:
+        description: Module path under modules (for example, avm/virtual-network)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: terraform-module-checkov-${{ inputs.module_name }}
+  cancel-in-progress: false
+
+jobs:
+  plan-checkov:
+    name: Plan and scan ${{ inputs.module_name }} module
+    runs-on: self-hosted
+    timeout-minutes: 60
+
+    defaults:
+      run:
+        shell: bash
+
+    env:
+      MODULE_NAME: ${{ inputs.module_name }}
+      TEST_DIR: modules/${{ inputs.module_name }}/test
+      ARM_USE_OIDC: "true"
+      ARM_USE_AZUREAD: "true"
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_location: westus3
+      TF_VAR_test_run_id: ${{ github.run_id }}
+      TFSTATE_KEY: advocate/test/${{ inputs.module_name }}-module-test.tfstate
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Require main branch
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "This plan and Checkov test must be dispatched from main." >&2
+            exit 1
+          fi
+
+      - name: Validate module test directory
+        run: |
+          if [[ ! "$MODULE_NAME" =~ ^([a-z0-9][a-z0-9-]*|(avm|custom)/[a-z0-9][a-z0-9-]*)$ ]]; then
+            echo "Module must be a lowercase module name or an avm/custom module path." >&2
+            exit 1
+          fi
+
+          if [[ ! -d "$TEST_DIR" ]]; then
+            echo "Test directory does not exist: $TEST_DIR" >&2
+            exit 1
+          fi
+
+          if ! compgen -G "$TEST_DIR/*.tf" > /dev/null; then
+            echo "No Terraform files were found in $TEST_DIR." >&2
+            exit 1
+          fi
+
+          echo "Testing module '$MODULE_NAME' from '$TEST_DIR'."
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.1"
+
+      - name: Log in to Azure with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Verify configuration
+        run: |
+          test -n "$ARM_CLIENT_ID" || { echo "AZURE_CLIENT_ID is not configured." >&2; exit 1; }
+          test -n "$ARM_TENANT_ID" || { echo "AZURE_TENANT_ID is not configured." >&2; exit 1; }
+          test -n "$ARM_SUBSCRIPTION_ID" || { echo "AZURE_SUBSCRIPTION_ID is not configured." >&2; exit 1; }
+          test -n "${{ vars.TFSTATE_RESOURCE_GROUP }}" || { echo "TFSTATE_RESOURCE_GROUP is not configured." >&2; exit 1; }
+          test -n "${{ vars.TFSTATE_STORAGE_ACCOUNT }}" || { echo "TFSTATE_STORAGE_ACCOUNT is not configured." >&2; exit 1; }
+          test -n "${{ vars.TFSTATE_CONTAINER }}" || { echo "TFSTATE_CONTAINER is not configured." >&2; exit 1; }
+          test -n "${{ vars.TFSTATE_SUBSCRIPTION_ID }}" || { echo "TFSTATE_SUBSCRIPTION_ID is not configured." >&2; exit 1; }
+
+      - name: Verify private backend connectivity
+        run: |
+          backend_host="${{ vars.TFSTATE_STORAGE_ACCOUNT }}.blob.core.windows.net"
+          backend_ip="$(getent ahostsv4 "$backend_host" | awk 'NR == 1 { print $1 }')"
+          echo "$backend_host resolves to $backend_ip"
+
+          if [[ ! "$backend_ip" =~ ^10\. &&
+                ! "$backend_ip" =~ ^192\.168\. &&
+                ! "$backend_ip" =~ ^172\.(1[6-9]|2[0-9]|3[01])\. ]]; then
+            echo "The backend hostname did not resolve to an RFC 1918 private address." >&2
+            exit 1
+          fi
+
+          http_code="$(curl --silent --show-error --output /dev/null \
+            --write-out "%{http_code}" "https://$backend_host/")"
+          echo "Azure Blob endpoint HTTP status: $http_code"
+          test "$http_code" != "000"
+
+      - name: Check formatting
+        run: terraform fmt -check -recursive "modules/$MODULE_NAME"
+
+      - name: Initialize remote backend
+        id: init
+        run: >-
+          terraform -chdir="$TEST_DIR" init -reconfigure -input=false
+          -backend-config="resource_group_name=${{ vars.TFSTATE_RESOURCE_GROUP }}"
+          -backend-config="storage_account_name=${{ vars.TFSTATE_STORAGE_ACCOUNT }}"
+          -backend-config="container_name=${{ vars.TFSTATE_CONTAINER }}"
+          -backend-config="key=$TFSTATE_KEY"
+          -backend-config="subscription_id=${{ vars.TFSTATE_SUBSCRIPTION_ID }}"
+          -backend-config="tenant_id=$ARM_TENANT_ID"
+          -backend-config="use_oidc=true"
+          -backend-config="use_azuread_auth=true"
+
+      - name: Validate
+        id: validate
+        run: terraform -chdir="$TEST_DIR" validate -no-color
+
+      ######################################################################
+      # TERRAFORM PLAN FOR CHECKOV
+      ######################################################################
+
+      - name: Terraform Plan for Checkov
+        id: plan
+        run: |
+          set -euo pipefail
+
+          terraform -chdir="$TEST_DIR" plan \
+            -input=false \
+            -no-color \
+            -out=tfplan.binary
+
+          terraform -chdir="$TEST_DIR" show -json tfplan.binary > "$TEST_DIR/tfplan.json"
+          test -s "$TEST_DIR/tfplan.json"
+
+      ######################################################################
+      # INSTALL CHECKOV
+      ######################################################################
+
+      - name: Install Checkov
+        id: install_checkov
+        run: |
+          set -euo pipefail
+
+          python3 -m venv "${RUNNER_TEMP}/checkov-venv"
+
+          "${RUNNER_TEMP}/checkov-venv/bin/pip" install \
+            --quiet \
+            --disable-pip-version-check \
+            "checkov==3.2.529"
+
+          echo "${RUNNER_TEMP}/checkov-venv/bin" >> "$GITHUB_PATH"
+          "${RUNNER_TEMP}/checkov-venv/bin/checkov" --version
+
+      ######################################################################
+      # RUN CHECKOV
+      ######################################################################
+
+      - name: Run Checkov
+        id: checkov
+        env:
+          SCAN_PATH: ${{ github.workspace }}/modules/${{ inputs.module_name }}/test
+        run: |
+          set -euo pipefail
+
+          RESULTS_DIR="${RUNNER_TEMP}/checkov-results"
+          mkdir -p "$RESULTS_DIR"
+
+          set +e
+          checkov \
+            --file "$SCAN_PATH/tfplan.json" \
+            --framework terraform_plan \
+            --repo-root-for-plan-enrichment "$SCAN_PATH" \
+            --deep-analysis \
+            --output json \
+            --output-file-path "$RESULTS_DIR" \
+            > "$RESULTS_DIR/checkov.log" 2>&1
+          CHECKOV_EXIT=$?
+          set -e
+
+          RESULTS_JSON="$(
+            find "$RESULTS_DIR" \
+              -maxdepth 1 \
+              -type f \
+              -name '*.json' \
+              -print -quit
+          )"
+
+          if [ -z "$RESULTS_JSON" ]; then
+            echo "::error::Checkov did not produce a JSON report."
+            exit 1
+          fi
+
+          RESULTS_JSON="$RESULTS_JSON" python3 - <<'PY'
+          import json
+          import os
+          from collections import Counter
+
+          with open(os.environ["RESULTS_JSON"]) as f:
+              raw = json.load(f)
+
+          reports = raw if isinstance(raw, list) else [raw]
+
+          def collect(key):
+              return [
+                  item
+                  for report in reports
+                  for item in report.get("results", {}).get(key, [])
+              ]
+
+          passed = collect("passed_checks")
+          failed = collect("failed_checks")
+          skipped = collect("skipped_checks")
+
+          counts = Counter(
+              (check.get("check_id", "Unknown"), check.get("check_name", ""))
+              for check in failed
+          )
+
+          lines = [
+              "## Checkov - Terraform Plan Security Scan",
+              "",
+              f"**Module:** `{os.environ['MODULE_NAME']}`",
+              "",
+              "| Metric | Count |",
+              "|---|---:|",
+              f"| Passed | {len(passed)} |",
+              f"| Failed | {len(failed)} |",
+              f"| Skipped | {len(skipped)} |",
+              "",
+              "### Failed checks",
+              "",
+          ]
+
+          if counts:
+              lines.extend([
+                  "| Check | Description | Findings |",
+                  "|---|---|---:|",
+              ])
+              for (check_id, name), count in counts.most_common():
+                  lines.append(f"| {check_id} | {name.replace('|', '/')} | {count} |")
+          else:
+              lines.append("No failed checks.")
+
+          lines.extend(["", "**Mode:** Non-blocking policy findings"])
+
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+              f.write("\n".join(lines) + "\n")
+          PY
+
+          # Non-blocking policy findings; only Checkov execution errors fail the job.
+          if [ "$CHECKOV_EXIT" -gt 1 ]; then
+            echo "::error::Checkov failed with exit code $CHECKOV_EXIT"
+            exit "$CHECKOV_EXIT"
+          fi
+
+      ######################################################################
+      # UPLOAD CHECKOV RESULTS
+      ######################################################################
+
+      - name: Upload Checkov Results
+        if: always() && steps.checkov.outcome != 'skipped'
+        uses: actions/upload-artifact@v7
+        with:
+          name: checkov-results-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/checkov-results
+          retention-days: 14
+          if-no-files-found: warn
+
+      ######################################################################
+      # VALIDATION SUMMARY
+      ######################################################################
+
+      - name: Post Validation Summary
+        if: always()
+        run: |
+          {
+            echo "## Terraform module plan and Checkov validation"
+            echo ""
+            echo "| Step | Status |"
+            echo "|---|---|"
+            echo "| Init | ${{ steps.init.outcome }} |"
+            echo "| Validate | ${{ steps.validate.outcome }} |"
+            echo "| Plan | ${{ steps.plan.outcome }} |"
+            echo "| Checkov Installation | ${{ steps.install_checkov.outcome }} |"
+            echo "| Checkov Security Scan | ${{ steps.checkov.outcome }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
